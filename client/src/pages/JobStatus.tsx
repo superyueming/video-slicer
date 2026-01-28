@@ -222,7 +222,7 @@ export default function JobStatus() {
                           )}
                         </Button>
                       )}
-                      {job.step !== 'uploaded' && (
+                      {(job.step !== 'uploaded' || (job.step === 'uploaded' && job.progress > 0)) && (
                         <Button
                           size="sm"
                           variant="outline"
@@ -281,7 +281,7 @@ export default function JobStatus() {
                           )}
                         </Button>
                       )}
-                      {job.step === 'transcribed' && (
+                      {(job.step === 'transcribed' || (job.step === 'audio_extracted' && job.progress > 0)) && (
                         <Button
                           size="sm"
                           variant="outline"
