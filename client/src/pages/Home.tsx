@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Progress } from "@/components/ui/progress";
 import { Upload, Sparkles, Scissors, FileVideo, Zap } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -16,6 +17,7 @@ export default function Home() {
   const [asrMethod, setAsrMethod] = useState<"whisper" | "aliyun">("whisper");
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const uploadVideoMutation = trpc.video.uploadVideo.useMutation();
   const createJobMutation = trpc.video.createJob.useMutation();
@@ -62,29 +64,38 @@ export default function Home() {
       return;
     }
 
-    // 文件大小检查（100MB）
-    const MAX_FILE_SIZE = 100 * 1024 * 1024;
+    // 文件大小检查（2GB）
+    const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024;
     if (videoFile.size > MAX_FILE_SIZE) {
-      toast.error(`文件大小超过限制，最大支持100MB`);
+      toast.error(`文件大小超过限制，最大支持2GB`);
       return;
     }
 
     setIsUploading(true);
 
     try {
-      // 读取文件为Base64
+      // 读取文件为Base64（带进度）
+      toast.info("正在读取文件...");
       const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
+      
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        reader.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const percentComplete = Math.round((e.loaded / e.total) * 50); // 读取占总进度50%
+            setUploadProgress(percentComplete);
+          }
+        };
+        
         reader.onload = () => {
           const result = reader.result as string;
           const base64 = result.split(",")[1];
+          setUploadProgress(50);
           resolve(base64);
         };
+        
         reader.onerror = reject;
+        reader.readAsDataURL(videoFile);
       });
-      reader.readAsDataURL(videoFile);
-
-      const base64Data = await base64Promise;
 
       // 上传视频
       toast.info("正在上传视频...");
@@ -94,8 +105,10 @@ export default function Home() {
         fileSize: videoFile.size,
         base64Data,
       });
+      
+      setUploadProgress(100);
 
-      // 创建处理任务
+      // 4. 创建处理任务
       toast.info("正在创建处理任务...");
       const jobResult = await createJobMutation.mutateAsync({
         videoUrl: uploadResult.url,
@@ -125,6 +138,7 @@ export default function Home() {
       toast.error(errorMessage);
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -270,6 +284,17 @@ export default function Home() {
               </RadioGroup>
             </div>
 
+            {/* Upload Progress */}
+            {isUploading && uploadProgress > 0 && uploadProgress < 100 && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">上传进度</span>
+                  <span className="font-medium">{uploadProgress}%</span>
+                </div>
+                <Progress value={uploadProgress} className="h-2" />
+              </div>
+            )}
+
             {/* Submit Button */}
             <Button
               size="lg"
@@ -280,7 +305,7 @@ export default function Home() {
               {isUploading ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                  处理中...
+                  {uploadProgress > 0 && uploadProgress < 100 ? `上传中 ${uploadProgress}%` : '处理中...'}
                 </>
               ) : (
                 <>

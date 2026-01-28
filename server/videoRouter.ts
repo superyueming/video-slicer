@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { protectedProcedure, router, publicProcedure } from './_core/trpc';
 import { createVideoJob, getUserVideoJobs, getVideoJob, updateJobProgress, markJobCompleted, markJobFailed } from './videoDb';
 import { storagePut } from './storage';
+import { getPresignedUploadUrl, confirmUpload } from './storagePresigned';
 import path from 'path';
 import fs from 'fs/promises';
 import os from 'os';
@@ -32,10 +33,10 @@ export const videoRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { filename, contentType, fileSize, base64Data } = input;
       
-      // 文件大小限制（100MB）
-      const MAX_FILE_SIZE = 100 * 1024 * 1024;
+      // 文件大小限制（2GB，考虑Base64编码开销）
+      const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024;
       if (fileSize > MAX_FILE_SIZE) {
-        throw new Error(`文件大小超过限制（最大100MB）`);
+        throw new Error(`文件大小超过限制（最大2GB）`);
       }
       
       // 解码Base64数据
