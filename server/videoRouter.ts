@@ -240,6 +240,42 @@ export const videoRouter = router({
     }),
   
   /**
+   * 更新片段列表
+   */
+  updateSegments: protectedProcedure
+    .input(z.object({
+      jobId: z.number(),
+      segments: z.array(z.object({
+        start: z.number(),
+        end: z.number(),
+        reason: z.string(),
+      })),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const job = await getVideoJob(input.jobId);
+      
+      if (!job) {
+        throw new Error('Job not found');
+      }
+      
+      if (job.userId !== ctx.user.id) {
+        throw new Error('Unauthorized');
+      }
+      
+      // 更新数据库
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+      
+      await db.update(videoJobs)
+        .set({
+          selectedSegments: input.segments,
+        })
+        .where(eq(videoJobs.id, input.jobId));
+      
+      return { success: true };
+    }),
+  
+  /**
    * 步骤4: 生成视频片段
    */
   generateClips: protectedProcedure

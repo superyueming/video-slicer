@@ -17,11 +17,14 @@ import {
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
+import { AnalysisResultDialog } from "@/components/AnalysisResultDialog";
+import { useState } from "react";
 
 export default function JobStatus() {
   const [, params] = useRoute("/job/:id");
   const [, setLocation] = useLocation();
   const jobId = params?.id ? parseInt(params.id) : 0;
+  const [showAnalysisDialog, setShowAnalysisDialog] = useState(false);
 
   const { data: job, isLoading, refetch } = trpc.video.getJob.useQuery(
     { jobId },
@@ -89,6 +92,16 @@ export default function JobStatus() {
     },
     onError: (error) => {
       toast.error(`生成失败: ${error.message}`);
+    },
+  });
+  
+  const updateSegmentsMutation = trpc.video.updateSegments.useMutation({
+    onSuccess: () => {
+      toast.success('片段列表已更新');
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`更新失败: ${error.message}`);
     },
   });
   
@@ -393,10 +406,7 @@ export default function JobStatus() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => {
-                          // TODO: 显示分析结果弹窗
-                          alert(`已选择 ${job.selectedSegments?.length || 0} 个精彩片段`);
-                        }}
+                        onClick={() => setShowAnalysisDialog(true)}
                       >
                         查看结果 ({job.selectedSegments.length}个片段)
                       </Button>
@@ -593,6 +603,24 @@ export default function JobStatus() {
           </div>
         </div>
       </div>
+      
+      {/* 分析结果弹窗 */}
+      {job && showAnalysisDialog && (
+        <AnalysisResultDialog
+          open={showAnalysisDialog}
+          onOpenChange={setShowAnalysisDialog}
+          userRequirement={job.userRequirement}
+          scriptPrompt={job.scriptPrompt}
+          overallScript={job.overallScript}
+          segments={job.selectedSegments || []}
+          onSave={async (segments) => {
+            await updateSegmentsMutation.mutateAsync({
+              jobId: job.id,
+              segments,
+            });
+          }}
+        />
+      )}
     </div>
   );
 }
