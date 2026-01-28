@@ -44,3 +44,4 @@
 
 ## 紧急Bug修复
 - [x] 修复base64Data为undefined导致上传失败的问题
+- [x] 修复“文件读取失败”错误（reader.result为空）

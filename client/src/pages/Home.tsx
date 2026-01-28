@@ -87,17 +87,33 @@ export default function Home() {
           }
         };
         
-        reader.onload = () => {
-          const result = reader.result as string;
-          if (!result) {
-            reject(new Error('文件读取失败'));
+        reader.onload = (event) => {
+          console.log('FileReader onload triggered', event);
+          const result = event.target?.result;
+          console.log('FileReader result type:', typeof result, 'length:', result ? (result as string).length : 0);
+          
+          if (!result || typeof result !== 'string') {
+            console.error('Invalid result:', result);
+            reject(new Error('文件读取失败：result为空或类型错误'));
             return;
           }
-          const base64 = result.split(",")[1];
-          if (!base64) {
-            reject(new Error('Base64编码失败'));
+          
+          // Data URL 格式: data:video/mp4;base64,XXXXX
+          const parts = result.split(',');
+          if (parts.length !== 2) {
+            console.error('Invalid data URL format:', result.substring(0, 100));
+            reject(new Error('Data URL格式错误'));
             return;
           }
+          
+          const base64 = parts[1];
+          if (!base64 || base64.length === 0) {
+            console.error('Empty base64 data');
+            reject(new Error('Base64数据为空'));
+            return;
+          }
+          
+          console.log('Base64 data length:', base64.length);
           setUploadProgress(50);
           resolve(base64);
         };
