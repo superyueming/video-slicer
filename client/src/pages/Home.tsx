@@ -140,7 +140,13 @@ export default function Home() {
           reject(new Error('网络错误'));
         };
         
+        xhr.ontimeout = () => {
+          reject(new Error('上传超时，请检查网络或尝试更小的文件'));
+        };
+        
         xhr.open('POST', '/api/upload-video');
+        // 设置超时时间为10分钟（600000ms），适合大文件上传
+        xhr.timeout = 600000;
         xhr.send(formData);
       });
       

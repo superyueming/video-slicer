@@ -61,6 +61,9 @@ async function startServer() {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
 
+  // 设置服务器超时时间为10分钟（600000ms），适合大文件上传
+  server.timeout = 600000;
+  
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
     
