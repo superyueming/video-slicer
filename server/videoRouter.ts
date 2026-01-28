@@ -82,15 +82,11 @@ export const videoRouter = router({
         fileSize: input.fileSize,
         userRequirement: input.userRequirement,
         asrMethod: input.asrMethod,
-        status: 'pending',
+        status: 'completed', // 上传完成，等待用户手动触发分步处理
         progress: 0,
       });
       
-      // 异步处理视频（不阻塞响应）
-      processVideoAsync(jobId).catch(error => {
-        console.error(`Job ${jobId} processing failed:`, error);
-        markJobFailed(jobId, error.message);
-      });
+      // 不再自动处理，由用户在任务详情页手动触发每个步骤
       
       return { jobId };
     }),
