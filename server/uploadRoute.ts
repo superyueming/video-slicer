@@ -3,6 +3,7 @@ import multer from 'multer';
 import { storagePut } from './storage';
 import { nanoid } from 'nanoid';
 import fs from 'fs/promises';
+import path from 'path';
 
 const router = express.Router();
 
@@ -37,11 +38,18 @@ router.post('/upload-video', upload.single('video'), async (req, res) => {
     // 读取临时文件
     const fileBuffer = await fs.readFile(file.path);
     
-    // 生成S3存储键
+    // 生成S3存储键（使用URL安全的文件名）
     const timestamp = Date.now();
     const randomId = nanoid(10);
-    const filename = file.originalname;
-    const fileKey = `videos/${userId}/${timestamp}-${randomId}-${filename}`;
+    const originalFilename = file.originalname;
+    
+    // 提取文件扩展名，对文件名进行URL编码
+    const ext = path.extname(originalFilename);
+    const basename = path.basename(originalFilename, ext);
+    const safeBasename = encodeURIComponent(basename).replace(/%20/g, '-');
+    const safeFilename = `${safeBasename}${ext}`;
+    
+    const fileKey = `videos/${userId}/${timestamp}-${randomId}-${safeFilename}`;
     
     // 上传到S3
     const { url } = await storagePut(fileKey, fileBuffer, file.mimetype);
@@ -54,7 +62,7 @@ router.post('/upload-video', upload.single('video'), async (req, res) => {
       success: true,
       fileKey,
       url,
-      filename: file.originalname,
+      filename: originalFilename, // 保留原始文件名用于显示
       size: file.size,
       contentType: file.mimetype,
     });

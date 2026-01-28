@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, original_filename, original_video_url, original_video_key, status, error_message FROM video_jobs WHERE id = 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 28B4hwZEfm8VzTA.118e2f71f6aa --database YzKxrb3WDhX8V8hPEaRuDD --execute SELECT id, original_filename, original_video_url, original_video_key, status, error_message FROM video_jobs WHERE id = 1;",
+  "rows": [
+    {
+      "id": "1",
+      "original_filename": "è¥é+åºæµ·å¤§ä¼.mp4",
+      "original_video_url": "https://d2xsxph8kpxj0f.cloudfront.net/310419663026865931/YzKxrb3WDhX8V8hPEaRuDD/videos/anonymous/1769592364255-pSOdtBIcPL-è¥é+åºæµ·å¤§ä¼.mp4",
+      "original_video_key": "videos/anonymous/1769592364255-pSOdtBIcPL-è¥é+åºæµ·å¤§ä¼.mp4",
+      "status": "failed",
+      "error_message": "Failed to download video: 403 Forbidden"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\toriginal_filename\toriginal_video_url\toriginal_video_key\tstatus\terror_message\n1\tè¥é+åºæµ·å¤§ä¼.mp4\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663026865931/YzKxrb3WDhX8V8hPEaRuDD/videos/anonymous/1769592364255-pSOdtBIcPL-è¥é+åºæµ·å¤§ä¼.mp4\tvideos/anonymous/1769592364255-pSOdtBIcPL-è¥é+åºæµ·å¤§ä¼.mp4\tfailed\tFailed to download video: 403 Forbidden\n",
+  "stderr": "",
+  "execution_time_ms": 1645
+}

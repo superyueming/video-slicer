@@ -67,3 +67,8 @@
 - [x] 发现视频文件损坏问题（moov atom not found）
 - [x] 添加视频下载验证
 - [ ] 需要重新上传视频测试完整流程
+
+## S3永久链接修复
+- [ ] 修改uploadRoute使用storagePut上传并返回永久URL
+- [ ] 确保S3 bucket配置为公开读取
+- [ ] 测试永久链接的可访问性

@@ -1,0 +1,19 @@
+{
+  "query": "SELECT id, status, progress, current_step, error_message, created_at, updated_at FROM video_jobs WHERE id=1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 28B4hwZEfm8VzTA.118e2f71f6aa --database YzKxrb3WDhX8V8hPEaRuDD --execute SELECT id, status, progress, current_step, error_message, created_at, updated_at FROM video_jobs WHERE id=1;",
+  "rows": [
+    {
+      "id": "1",
+      "status": "failed",
+      "progress": "5",
+      "current_step": "正在下载视频...",
+      "error_message": "Failed to download video: 403 Forbidden",
+      "created_at": "2026-01-28 09:27:01",
+      "updated_at": "2026-01-28 10:10:16"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tstatus\tprogress\tcurrent_step\terror_message\tcreated_at\tupdated_at\n1\tfailed\t5\t正在下载视频...\tFailed to download video: 403 Forbidden\t2026-01-28 09:27:01\t2026-01-28 10:10:16\n",
+  "stderr": "",
+  "execution_time_ms": 1548
+}
