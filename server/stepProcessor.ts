@@ -432,3 +432,121 @@ function timeStringToSeconds(timeStr: string): number {
     return Number(timeStr);
   }
 }
+
+/**
+ * 步骤4: 生成视频片段
+ * 根据AI选择的时间戳剪辑视频并拼接成最终视频
+ */
+export async function generateClipsStep(jobId: number): Promise<void> {
+  console.log(`[GenerateClips] Starting for job ${jobId}`);
+  
+  try {
+    // 1. 获取任务信息
+    const db = await getDb();
+    if (!db) throw new Error('Database not available');
+    
+    const [job] = await db.select().from(videoJobs).where(eq(videoJobs.id, jobId));
+    if (!job) throw new Error(`Job ${jobId} not found`);
+    
+    // 验证步骤
+    if (job.step !== 'analyzed') {
+      throw new Error(`Invalid step: expected 'analyzed', got '${job.step}'`);
+    }
+    
+    if (!job.selectedSegments || job.selectedSegments.length === 0) {
+      throw new Error('No segments selected for clipping');
+    }
+    
+    // 2. 更新状态为处理中
+    await db.update(videoJobs)
+      .set({
+        status: 'processing',
+        progress: 0,
+        currentStep: '正在生成视频片段...',
+      })
+      .where(eq(videoJobs.id, jobId));
+    
+    // 3. 下载原始视频
+    console.log(`[GenerateClips] Downloading video from ${job.originalVideoUrl}`);
+    await db.update(videoJobs)
+      .set({ progress: 10, currentStep: '正在下载原始视频...' })
+      .where(eq(videoJobs.id, jobId));
+    
+    const crypto = await import('crypto');
+    const fs = await import('fs/promises');
+    const randomId = crypto.randomBytes(6).toString('base64url');
+    const tmpDir = `/tmp/video-job-${jobId}-${randomId}`;
+    await fs.mkdir(tmpDir, { recursive: true });
+    const videoPath = path.join(tmpDir, 'video.mp4');
+    
+    // 下载视频文件
+    const response = await fetch(job.originalVideoUrl);
+    if (!response.ok) throw new Error(`Failed to download video: ${response.statusText}`);
+    const downloadedVideoBuffer = Buffer.from(await response.arrayBuffer());
+    await fs.writeFile(videoPath, downloadedVideoBuffer);
+    
+    // 4. 剪辑视频片段
+    console.log(`[GenerateClips] Clipping ${job.selectedSegments.length} segments`);
+    await db.update(videoJobs)
+      .set({ progress: 30, currentStep: '正在剪辑视频片段...' })
+      .where(eq(videoJobs.id, jobId));
+    
+    const { clipVideos } = await import('./videoService.js');
+    const clipPaths = await clipVideos(videoPath, job.selectedSegments);
+    
+    // 5. 拼接视频片段
+    console.log(`[GenerateClips] Concatenating ${clipPaths.length} clips`);
+    await db.update(videoJobs)
+      .set({ progress: 60, currentStep: '正在拼接视频片段...' })
+      .where(eq(videoJobs.id, jobId));
+    
+    const dir = path.dirname(videoPath);
+    const outputPath = path.join(dir, 'final-output.mp4');
+    const { concatenateVideos } = await import('./videoService.js');
+    await concatenateVideos(clipPaths, outputPath);
+    
+    // 6. 上传最终视频到S3
+    console.log(`[GenerateClips] Uploading final video to S3`);
+    await db.update(videoJobs)
+      .set({ progress: 80, currentStep: '正在上传最终视频...' })
+      .where(eq(videoJobs.id, jobId));
+    
+    const finalVideoBuffer = await fs.readFile(outputPath);
+    const videoKey = `videos/${job.userId || 'anonymous'}/${jobId}-final.mp4`;
+    const { url: finalVideoUrl } = await storagePut(videoKey, finalVideoBuffer, 'video/mp4');
+    
+    // 7. 清理临时文件
+    await fs.rm(tmpDir, { recursive: true, force: true });
+    
+    // 8. 更新数据库
+    await db.update(videoJobs)
+      .set({
+        finalVideoUrl,
+        finalVideoKey: videoKey,
+        step: 'completed',
+        progress: 100,
+        currentStep: '视频生成完成',
+        status: 'completed',
+        completedAt: new Date(),
+      })
+      .where(eq(videoJobs.id, jobId));
+    
+    console.log(`[GenerateClips] Job ${jobId} completed`);
+    
+  } catch (error: any) {
+    console.error(`[GenerateClips] Job ${jobId} failed:`, error);
+    
+    const db = await getDb();
+    if (db) {
+      await db.update(videoJobs)
+        .set({
+          status: 'failed',
+          errorMessage: error.message,
+          currentStep: '视频生成失败',
+        })
+        .where(eq(videoJobs.id, jobId));
+    }
+    
+    throw error;
+  }
+}

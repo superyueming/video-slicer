@@ -273,3 +273,49 @@ export async function cleanupTempFiles(files: string[]): Promise<void> {
     }
   }
 }
+
+/**
+ * 剪辑视频片段
+ * @param videoPath 原始视频路径
+ * @param segments 要剪辑的片段列表（包含start和end时间戳）
+ * @returns 剪辑后的视频文件路径数组
+ */
+export async function clipVideos(
+  videoPath: string,
+  segments: Array<{ start: number; end: number; reason: string }>
+): Promise<string[]> {
+  const clipPaths: string[] = [];
+  const path = await import('path');
+  const dir = path.dirname(videoPath);
+  
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
+    const clipPath = path.join(dir, `clip-${i + 1}.mp4`);
+    
+    // 使用FFmpeg剪辑视频片段
+    // -ss: 开始时间
+    // -t: 持续时间
+    // -c copy: 直接复制流，不重新编码（快速）
+    const duration = seg.end - seg.start;
+    const command = `ffmpeg -ss ${seg.start} -i "${videoPath}" -t ${duration} -c copy "${clipPath}" -y`;
+    
+    console.log(`[ClipVideos] Clipping segment ${i + 1}/${segments.length}: ${seg.start}s - ${seg.end}s`);
+    
+    await new Promise<void>((resolve, reject) => {
+      exec(command, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`[ClipVideos] Error clipping segment ${i + 1}:`, stderr);
+          reject(new Error(`Failed to clip segment ${i + 1}: ${error.message}`));
+        } else {
+          resolve();
+        }
+      });
+    });
+    
+    clipPaths.push(clipPath);
+  }
+  
+  return clipPaths;
+}
+
+

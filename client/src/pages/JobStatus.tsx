@@ -82,6 +82,16 @@ export default function JobStatus() {
     },
   });
   
+  const generateClipsMutation = trpc.video.generateClips.useMutation({
+    onSuccess: () => {
+      toast.success('开始生成视频片段...');
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`生成失败: ${error.message}`);
+    },
+  });
+  
   const handleRetry = () => {
     if (job?.status === 'failed') {
       retryMutation.mutate({ jobId });
@@ -394,10 +404,60 @@ export default function JobStatus() {
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-between p-3 rounded-lg bg-accent/30">
-                  <div>
-                    <p className="font-medium">步骤4: 生成视频</p>
-                    <p className="text-sm text-muted-foreground">待实现</p>
+                {/* 步骤4: 生成视频片段 */}
+                <div className="p-4 rounded-lg bg-accent/30">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="font-medium">步骤4: 生成视频片段</p>
+                      <p className="text-sm text-muted-foreground">
+                        {job.step === 'completed' ? '已完成' : '未开始'}
+                      </p>
+                    </div>
+                    <Badge variant={job.step === 'completed' ? 'default' : 'secondary'}>
+                      {job.step === 'completed' ? '完成' : '等待中'}
+                    </Badge>
+                  </div>
+                  
+                  {job.step === 'analyzed' && job.status === 'processing' && (
+                    <div className="space-y-2 mb-3">
+                      <Progress value={job.progress || 0} className="h-2" />
+                      <p className="text-xs text-muted-foreground">
+                        {job.currentStep || '正在处理...'}
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-2">
+                    {job.step === 'analyzed' && job.progress === 0 && (
+                      <Button
+                        size="sm"
+                        onClick={() => generateClipsMutation.mutate({ jobId: job.id })}
+                        disabled={generateClipsMutation.isPending}
+                      >
+                        {generateClipsMutation.isPending ? '处理中...' : '开始处理'}
+                      </Button>
+                    )}
+                    
+                    {(job.step === 'analyzed' && job.progress > 0 && job.progress < 100) || job.step === 'completed' ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => generateClipsMutation.mutate({ jobId: job.id })}
+                        disabled={generateClipsMutation.isPending}
+                      >
+                        {generateClipsMutation.isPending ? '处理中...' : '重新处理'}
+                      </Button>
+                    ) : null}
+                    
+                    {job.finalVideoUrl && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(job.finalVideoUrl!, '_blank')}
+                      >
+                        下载视频
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>

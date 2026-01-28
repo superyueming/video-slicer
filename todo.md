@@ -80,3 +80,9 @@
 
 ## JobStatus页面错误修复
 - [x] 修复null值调用toFixed()导致的TypeError
+
+## 步骤4（生成视频片段）实现
+- [x] 添加步骤4的数据库字段（finalVideoUrl和finalVideoKey）
+- [x] 实现视频剪辑和拼接逻辑（clipVideos和concatenateVideos）
+- [x] 添加generateClips API endpoint
+- [x] 实现步骤4的前端UI和按钮
