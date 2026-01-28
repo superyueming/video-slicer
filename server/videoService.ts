@@ -13,16 +13,11 @@ const execAsync = promisify(exec);
 
 const PYTHON_SCRIPT = path.join(__dirname, 'video_processor.py');
 
-interface TranscriptSegment {
-  start: number;
-  end: number;
-  text: string;
-}
+import type { WhisperResponse, WhisperSegment } from './_core/voiceTranscription';
 
-interface TranscriptResult {
-  text: string;
-  segments: TranscriptSegment[];
-}
+// 使用Whisper API的原生类型
+type TranscriptSegment = WhisperSegment;
+type TranscriptResult = WhisperResponse;
 
 interface SelectedSegment {
   start: number;

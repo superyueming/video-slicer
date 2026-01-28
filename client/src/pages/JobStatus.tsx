@@ -3,6 +3,7 @@ import { useRoute, useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { 
   CheckCircle2, 
   XCircle, 
@@ -68,6 +69,16 @@ export default function JobStatus() {
     },
     onError: (error) => {
       toast.error(`转录失败: ${error.message}`);
+    },
+  });
+  
+  const analyzeContentMutation = trpc.video.analyzeContent.useMutation({
+    onSuccess: () => {
+      toast.success('开始AI分析...');
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`分析失败: ${error.message}`);
     },
   });
   
@@ -312,10 +323,74 @@ export default function JobStatus() {
                   )}
                 </div>
                 
-                <div className="flex items-center justify-between p-3 rounded-lg bg-accent/30">
-                  <div>
-                    <p className="font-medium">步骤3: AI分析</p>
-                    <p className="text-sm text-muted-foreground">待实现</p>
+                {/* 步骤3: AI内容分析 */}
+                <div className="p-4 rounded-lg border bg-card">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-medium">步骤3: AI内容分析</h3>
+                    {job.step === 'analyzed' && (
+                      <Badge variant="default">已完成</Badge>
+                    )}
+                    {job.step === 'transcribed' && job.progress === 0 && (
+                      <Badge variant="secondary">待处理</Badge>
+                    )}
+                    {job.step === 'transcribed' && job.progress > 0 && job.progress < 100 && (
+                      <Badge variant="default">处理中</Badge>
+                    )}
+                  </div>
+                  
+                  {/* 进度条 */}
+                  {job.step === 'transcribed' && job.progress > 0 && job.progress < 100 && (
+                    <div className="mb-3">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-muted-foreground">{job.currentStep}</span>
+                        <span className="font-medium">{job.progress}%</span>
+                      </div>
+                      <Progress value={job.progress} className="h-2" />
+                    </div>
+                  )}
+                  
+                  {/* 按钮 */}
+                  <div className="flex gap-2">
+                    {/* 开始处理按钮 */}
+                    {job.step === 'transcribed' && job.progress === 0 && (
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          analyzeContentMutation.mutate({ jobId: job.id });
+                        }}
+                        disabled={analyzeContentMutation.isPending}
+                      >
+                        {analyzeContentMutation.isPending ? '处理中...' : '开始处理'}
+                      </Button>
+                    )}
+                    
+                    {/* 重新处理按钮 */}
+                    {(job.step === 'analyzed' || (job.step === 'transcribed' && job.progress > 0)) && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          analyzeContentMutation.mutate({ jobId: job.id });
+                        }}
+                        disabled={analyzeContentMutation.isPending}
+                      >
+                        {analyzeContentMutation.isPending ? '处理中...' : '重新处理'}
+                      </Button>
+                    )}
+                    
+                    {/* 查看结果按钮 */}
+                    {job.step === 'analyzed' && job.selectedSegments && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          // TODO: 显示分析结果弹窗
+                          alert(`已选择 ${job.selectedSegments?.length || 0} 个精彩片段`);
+                        }}
+                      >
+                        查看结果 ({job.selectedSegments.length}个片段)
+                      </Button>
+                    )}
                   </div>
                 </div>
                 

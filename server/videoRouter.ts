@@ -211,6 +211,33 @@ export const videoRouter = router({
       
       return { success: true, jobId: input.jobId };
     }),
+  
+  /**
+   * 步骤3: AI内容分析
+   */
+  analyzeContent: protectedProcedure
+    .input(z.object({ jobId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const job = await getVideoJob(input.jobId);
+      
+      if (!job) {
+        throw new Error('Job not found');
+      }
+      
+      if (job.userId !== ctx.user.id) {
+        throw new Error('Unauthorized');
+      }
+      
+      // 导入并执行AI分析
+      const { analyzeContentStep } = await import('./stepProcessor');
+      
+      // 异步执行（不阻塞响应）
+      analyzeContentStep(input.jobId).catch(error => {
+        console.error(`AnalyzeContent ${input.jobId} failed:`, error);
+      });
+      
+      return { success: true, jobId: input.jobId };
+    }),
 });
 
 /**
