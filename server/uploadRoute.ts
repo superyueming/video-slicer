@@ -38,18 +38,28 @@ router.post('/upload-video', upload.single('video'), async (req, res) => {
     // 读取临时文件
     const fileBuffer = await fs.readFile(file.path);
     
-    // 生成S3存储键（使用URL安全的文件名）
+    // 生成S3存储键（使用ASCII安全的文件名）
     const timestamp = Date.now();
-    const randomId = nanoid(10);
     const originalFilename = file.originalname;
     
-    // 提取文件扩展名，对文件名进行URL编码
+    // 提取文件扩展名，将文件名转换为ASCII安全字符
     const ext = path.extname(originalFilename);
     const basename = path.basename(originalFilename, ext);
-    const safeBasename = encodeURIComponent(basename).replace(/%20/g, '-');
-    const safeFilename = `${safeBasename}${ext}`;
     
-    const fileKey = `videos/${userId}/${timestamp}-${randomId}-${safeFilename}`;
+    // 将文件名转换为ASCII安全字符：只保留字母、数字、连字符和下划线
+    let safeBasename = basename
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-')  // 非ASCII字符替换为连字符
+      .replace(/-+/g, '-')            // 多个连字符合并为一个
+      .replace(/^-|-$/g, '');         // 去掉首尾的连字符
+    
+    // 如果转换后为空（全是中文或特殊字符），使用默认名称
+    if (!safeBasename) {
+      safeBasename = 'video';
+    }
+    
+    const safeFilename = `${safeBasename}${ext}`;
+    const fileKey = `videos/${userId}/${timestamp}-${safeFilename}`;
     
     // 上传到S3
     const { url } = await storagePut(fileKey, fileBuffer, file.mimetype);
