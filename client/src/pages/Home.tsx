@@ -90,71 +90,58 @@ export default function Home() {
     setIsUploading(true);
 
     try {
-      // 读取文件为Base64（带进度）
-      toast.info("正在读取文件...");
+      // 上传视频（使用FormData）
+      toast.info("正在上传视频...");
       
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
+      const formData = new FormData();
+      formData.append('video', fileToUpload);
+      
+      // 使用XMLHttpRequest以支持进度
+      const uploadResult = await new Promise<{
+        fileKey: string;
+        url: string;
+        filename: string;
+        size: number;
+        contentType: string;
+      }>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
         
-        reader.onprogress = (e) => {
+        xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) {
-            const percentComplete = Math.round((e.loaded / e.total) * 50); // 读取占总进度50%
+            const percentComplete = Math.round((e.loaded / e.total) * 100);
             setUploadProgress(percentComplete);
           }
         };
         
-        reader.onload = (event) => {
-          console.log('FileReader onload triggered', event);
-          const result = event.target?.result;
-          console.log('FileReader result type:', typeof result, 'length:', result ? (result as string).length : 0);
-          
-          if (!result || typeof result !== 'string') {
-            console.error('Invalid result:', result);
-            reject(new Error('文件读取失败：result为空或类型错误'));
-            return;
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            try {
+              const response = JSON.parse(xhr.responseText);
+              if (response.success) {
+                resolve({
+                  fileKey: response.fileKey,
+                  url: response.url,
+                  filename: response.filename,
+                  size: response.size,
+                  contentType: response.contentType,
+                });
+              } else {
+                reject(new Error(response.error || '上传失败'));
+              }
+            } catch (e) {
+              reject(new Error('解析响应失败'));
+            }
+          } else {
+            reject(new Error(`上传失败: ${xhr.status}`));
           }
-          
-          // Data URL 格式: data:video/mp4;base64,XXXXX
-          const parts = result.split(',');
-          if (parts.length !== 2) {
-            console.error('Invalid data URL format:', result.substring(0, 100));
-            reject(new Error('Data URL格式错误'));
-            return;
-          }
-          
-          const base64 = parts[1];
-          if (!base64 || base64.length === 0) {
-            console.error('Empty base64 data');
-            reject(new Error('Base64数据为空'));
-            return;
-          }
-          
-          console.log('Base64 data length:', base64.length);
-          setUploadProgress(50);
-          resolve(base64);
         };
         
-        reader.onerror = (error) => {
-          console.error('FileReader error:', error);
-          reject(new Error('文件读取错误'));
+        xhr.onerror = () => {
+          reject(new Error('网络错误'));
         };
         
-        try {
-          console.log('About to read file:', fileToUpload.name, fileToUpload.size);
-          reader.readAsDataURL(fileToUpload);
-        } catch (error) {
-          console.error('readAsDataURL error:', error);
-          reject(error);
-        }
-      });
-
-      // 上传视频
-      toast.info("正在上传视频...");
-      const uploadResult = await uploadVideoMutation.mutateAsync({
-        filename: videoFile.name,
-        contentType: videoFile.type,
-        fileSize: videoFile.size,
-        base64Data,
+        xhr.open('POST', '/api/upload-video');
+        xhr.send(formData);
       });
       
       setUploadProgress(100);
@@ -163,9 +150,9 @@ export default function Home() {
       toast.info("正在创建处理任务...");
       const jobResult = await createJobMutation.mutateAsync({
         videoUrl: uploadResult.url,
-        videoKey: uploadResult.key,
+        videoKey: uploadResult.fileKey,
         filename: uploadResult.filename,
-        fileSize: uploadResult.fileSize,
+        fileSize: uploadResult.size,
         userRequirement: requirement,
         asrMethod,
       });

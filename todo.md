@@ -46,3 +46,4 @@
 - [x] 修复base64Data为undefined导致上传失败的问题
 - [x] 修复“文件读取失败”错误（reader.result为空）
 - [x] 彻底解决event.target.result为空的问题
+- [x] 深入调查File对象为何导致FileReader返回空字符串（改用FormData上传）
