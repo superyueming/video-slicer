@@ -1,6 +1,9 @@
 import { z } from 'zod';
+import { eq } from 'drizzle-orm';
 import { protectedProcedure, router, publicProcedure } from './_core/trpc';
 import { createVideoJob, getUserVideoJobs, getVideoJob, updateJobProgress, markJobCompleted, markJobFailed } from './videoDb';
+import { getDb } from './db';
+import { videoJobs } from '../drizzle/schema';
 import { storagePut } from './storage';
 import { getPresignedUploadUrl, confirmUpload } from './storagePresigned';
 import path from 'path';
@@ -117,6 +120,46 @@ export const videoRouter = router({
   listJobs: protectedProcedure
     .query(async ({ ctx }) => {
       return await getUserVideoJobs(ctx.user.id);
+    }),
+  
+  /**
+   * 重启失败的任务
+   */
+  retryJob: protectedProcedure
+    .input(z.object({ jobId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const job = await getVideoJob(input.jobId);
+      
+      if (!job) {
+        throw new Error('Job not found');
+      }
+      
+      if (job.userId !== ctx.user.id) {
+        throw new Error('Unauthorized');
+      }
+      
+      if (job.status !== 'failed') {
+        throw new Error('Only failed jobs can be retried');
+      }
+      
+      // 重置任务状态
+      await updateJobProgress(input.jobId, 0, '准备重新处理...');
+      await getDb().then(db => db!.update(videoJobs)
+        .set({ 
+          status: 'pending',
+          errorMessage: null,
+          currentStep: '准备重新处理...',
+        })
+        .where(eq(videoJobs.id, input.jobId))
+      );
+      
+      // 异步处理视频（不阻塞响应）
+      processVideoAsync(input.jobId).catch(error => {
+        console.error(`Job ${input.jobId} retry failed:`, error);
+        markJobFailed(input.jobId, error.message);
+      });
+      
+      return { success: true, jobId: input.jobId };
     }),
 });
 

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { RefreshCw } from "lucide-react";
 
 export default function JobStatus() {
   const [, params] = useRoute("/job/:id");
@@ -35,6 +36,22 @@ export default function JobStatus() {
       }
     }
   );
+  
+  const retryMutation = trpc.video.retryJob.useMutation({
+    onSuccess: () => {
+      toast.success('任务已重新启动，正在处理...');
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`重启失败: ${error.message}`);
+    },
+  });
+  
+  const handleRetry = () => {
+    if (job?.status === 'failed') {
+      retryMutation.mutate({ jobId });
+    }
+  };
 
   useEffect(() => {
     if (job?.status === 'completed') {
@@ -108,6 +125,33 @@ export default function JobStatus() {
               <p className="text-muted-foreground mb-6">{job.currentStep}</p>
             )}
 
+            {job.status === 'failed' && job.errorMessage && (
+              <div className="mt-4 p-4 rounded-lg bg-destructive/10 text-destructive text-sm text-left">
+                <p className="font-semibold mb-1">错误信息：</p>
+                <p className="whitespace-pre-wrap">{job.errorMessage}</p>
+              </div>
+            )}
+            
+            {job.status === 'failed' && (
+              <Button 
+                onClick={handleRetry} 
+                disabled={retryMutation.isPending}
+                className="mt-6"
+              >
+                {retryMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    重启中...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    重新处理
+                  </>
+                )}
+              </Button>
+            )}
+            
             {(job.status === 'pending' || job.status === 'processing') && (
               <div className="space-y-2">
                 <Progress value={job.progress} className="h-2" />

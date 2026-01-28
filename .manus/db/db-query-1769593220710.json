@@ -1,0 +1,24 @@
+{
+  "query": "SELECT * FROM video_jobs ORDER BY created_at DESC LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 28B4hwZEfm8VzTA.118e2f71f6aa --database YzKxrb3WDhX8V8hPEaRuDD --execute SELECT * FROM video_jobs ORDER BY created_at DESC LIMIT 1;",
+  "rows": [],
+  "messages": [
+    "1\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663026865931/YzKxrb3WDhX8V8hPEaRuDD/videos/anonymous/1769592364255-pSOdtBIcPL-è¥é+åºæµ·å¤§ä¼.mp4\tvideos/anonymous/1769592364255-pSOdtBIcPL-è¥é+åºæµ·å¤§ä¼.mp4\tè¥é+åºæµ·å¤§ä¼.mp4\t528277185\tNULL\t请生成minimax的演讲精华切片\twhisper\tfailed\t15\t正在提取音频...\tVideo processing failed: Command failed: python3 /home/ubuntu/video-slicer-web/server/video_processor.py extract_audio '/tmp/video-job-1-3id2Po/input.mp4' '/tmp/video-job-1-3id2Po/audio.wav'",
+    "Traceback (most recent call last):",
+    "  File \"/home/ubuntu/video-slicer-web/server/video_processor.py\", line 7, in <module>",
+    "    import json",
+    "  File \"/home/ubuntu/.local/share/uv/python/cpython-3.13.8-linux-x86_64-gnu/lib/python3.13/json/__init__.py\", line 106, in <module>",
+    "    from .decoder import JSONDecoder, JSONDecodeError",
+    "  File \"/home/ubuntu/.local/share/uv/python/cpython-3.13.8-linux-x86_64-gnu/lib/python3.13/json/decoder.py\", line 3, in <module>",
+    "    import re",
+    "  File \"/home/ubuntu/.local/share/uv/python/cpython-3.13.8-linux-x86_64-gnu/lib/python3.13/re/__init__.py\", line 126, in <module>",
+    "    from . import _compiler, _parser",
+    "  File \"/home/ubuntu/.local/share/uv/python/cpython-3.13.8-linux-x86_64-gnu/lib/python3.13/re/_compiler.py\", line 18, in <module>",
+    "    assert _sre.MAGIC == MAGIC, \"SRE module mismatch\"",
+    "AssertionError: SRE module mismatch",
+    "\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\t2026-01-28 09:27:01\t2026-01-28 09:27:03\tNULL"
+  ],
+  "stdout": "id\tuser_id\toriginal_video_url\toriginal_video_key\toriginal_filename\tfile_size\tduration\tuser_requirement\tasr_method\tstatus\tprogress\tcurrent_step\terror_message\ttranscript_url\ttranscript_key\tfinal_video_url\tfinal_video_key\tsubtitle_url\tsubtitle_key\tselected_segments\tcreated_at\tupdated_at\tcompleted_at\n1\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663026865931/YzKxrb3WDhX8V8hPEaRuDD/videos/anonymous/1769592364255-pSOdtBIcPL-è¥é+åºæµ·å¤§ä¼.mp4\tvideos/anonymous/1769592364255-pSOdtBIcPL-è¥é+åºæµ·å¤§ä¼.mp4\tè¥é+åºæµ·å¤§ä¼.mp4\t528277185\tNULL\t请生成minimax的演讲精华切片\twhisper\tfailed\t15\t正在提取音频...\tVideo processing failed: Command failed: python3 /home/ubuntu/video-slicer-web/server/video_processor.py extract_audio '/tmp/video-job-1-3id2Po/input.mp4' '/tmp/video-job-1-3id2Po/audio.wav'\nTraceback (most recent call last):\n  File \"/home/ubuntu/video-slicer-web/server/video_processor.py\", line 7, in <module>\n    import json\n  File \"/home/ubuntu/.local/share/uv/python/cpython-3.13.8-linux-x86_64-gnu/lib/python3.13/json/__init__.py\", line 106, in <module>\n    from .decoder import JSONDecoder, JSONDecodeError\n  File \"/home/ubuntu/.local/share/uv/python/cpython-3.13.8-linux-x86_64-gnu/lib/python3.13/json/decoder.py\", line 3, in <module>\n    import re\n  File \"/home/ubuntu/.local/share/uv/python/cpython-3.13.8-linux-x86_64-gnu/lib/python3.13/re/__init__.py\", line 126, in <module>\n    from . import _compiler, _parser\n  File \"/home/ubuntu/.local/share/uv/python/cpython-3.13.8-linux-x86_64-gnu/lib/python3.13/re/_compiler.py\", line 18, in <module>\n    assert _sre.MAGIC == MAGIC, \"SRE module mismatch\"\nAssertionError: SRE module mismatch\n\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\t2026-01-28 09:27:01\t2026-01-28 09:27:03\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1501
+}
