@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, original_filename, step, progress, status, current_step, audio_url, transcript_url, selected_segments, final_video_url FROM video_jobs WHERE id = 2;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 28B4hwZEfm8VzTA.118e2f71f6aa --database YzKxrb3WDhX8V8hPEaRuDD --execute SELECT id, original_filename, step, progress, status, current_step, audio_url, transcript_url, selected_segments, final_video_url FROM video_jobs WHERE id = 2;",
+  "rows": [
+    {
+      "id": "2",
+      "original_filename": "aichuhaidahui.mp4",
+      "step": "analyzed",
+      "progress": "100",
+      "status": "completed",
+      "current_step": "AI分析完成",
+      "audio_url": "https://d2xsxph8kpxj0f.cloudfront.net/310419663026865931/YzKxrb3WDhX8V8hPEaRuDD/audio/1/2-audio.mp3",
+      "transcript_url": "https://d2xsxph8kpxj0f.cloudfront.net/310419663026865931/YzKxrb3WDhX8V8hPEaRuDD/transcripts/1/2-transcript.srt",
+      "selected_segments": "[{\"end\": null, \"reason\": \"minimax公司介绍及其核心定位：通用大模型（AGI）和全球化战略，这是理解其技术背景的关键信息。\", \"start\": null}, {\"end\": null, \"reason\": \"minimax语音模型（Speech 2.6）的领先能力展示，包括低延迟、多语言支持以及在智能客服和智能硬件中的应用，体现了其技术优势。\", \"start\": null}, {\"end\": null, \"reason\": \"minimax视频模型在国际榜单上的排名和实际应用案例（小猫跳水模板），展示了其多模态技术的市场影响力和病毒式传播能力。\", \"start\": null}, {\"end\": null, \"reason\": \"minimax C端产品（如星野、海螺AI）的多模态能力整合演示，突出了其在文本、语音、视频和音乐等方面的全栈自研能力。\", \"start\": null}, {\"end\": null, \"reason\": \"minimax在文化出海和内容生产效率上的实践，特别是与湖南卫视合作，利用AI能力将传统翻译和配音时间从数天缩短到数小时，体现了AI带来的效率革命。\", \"start\": null}]",
+      "final_video_url": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\toriginal_filename\tstep\tprogress\tstatus\tcurrent_step\taudio_url\ttranscript_url\tselected_segments\tfinal_video_url\n2\taichuhaidahui.mp4\tanalyzed\t100\tcompleted\tAI分析完成\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663026865931/YzKxrb3WDhX8V8hPEaRuDD/audio/1/2-audio.mp3\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663026865931/YzKxrb3WDhX8V8hPEaRuDD/transcripts/1/2-transcript.srt\t[{\"end\": null, \"reason\": \"minimax公司介绍及其核心定位：通用大模型（AGI）和全球化战略，这是理解其技术背景的关键信息。\", \"start\": null}, {\"end\": null, \"reason\": \"minimax语音模型（Speech 2.6）的领先能力展示，包括低延迟、多语言支持以及在智能客服和智能硬件中的应用，体现了其技术优势。\", \"start\": null}, {\"end\": null, \"reason\": \"minimax视频模型在国际榜单上的排名和实际应用案例（小猫跳水模板），展示了其多模态技术的市场影响力和病毒式传播能力。\", \"start\": null}, {\"end\": null, \"reason\": \"minimax C端产品（如星野、海螺AI）的多模态能力整合演示，突出了其在文本、语音、视频和音乐等方面的全栈自研能力。\", \"start\": null}, {\"end\": null, \"reason\": \"minimax在文化出海和内容生产效率上的实践，特别是与湖南卫视合作，利用AI能力将传统翻译和配音时间从数天缩短到数小时，体现了AI带来的效率革命。\", \"start\": null}]\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1534
+}

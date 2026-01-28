@@ -86,3 +86,9 @@
 - [x] 实现视频剪辑和拼接逻辑（clipVideos和concatenateVideos）
 - [x] 添加generateClips API endpoint
 - [x] 实现步骤4的前端UI和按钮
+
+## 步骤4按钮不显示问题修复
+- [x] 诊断问题原因（步骤3完成后progress=100导致按钮条件不满足）
+- [x] 修改analyzeContentStep将progress重置为0
+- [x] 手动更新任务2的progress为0验证修复
+- [x] 测试完整流程确保所有步骤正常工作

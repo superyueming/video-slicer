@@ -391,8 +391,8 @@ ${srtContent}
       .set({
         selectedSegments,
         step: 'analyzed',
-        progress: 100,
-        currentStep: 'AI分析完成',
+        progress: 0,  // 重置为0，等待用户手动触发步骤4
+        currentStep: 'AI分析完成，等待生成视频',
         status: 'completed',
       })
       .where(eq(videoJobs.id, jobId));
