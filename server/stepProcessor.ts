@@ -325,12 +325,17 @@ export async function analyzeContentStep(jobId: number): Promise<void> {
 
 3. **内容重点方向**：需要关注的内容主题（技术细节、商业策略、案例分享等）
 
-4. **剪辑节奏建议**：
-   - 片段时长（例如：30秒/1分钟/3分钟）
-   - 片段数量（例如：3-5个精华/完整保留）
-   - 转场风格（快速切换/平滑过渡）
+4. **剪辑节奏建议**（必须明确指定具体数值）：
+   - 片段时长：必须明确指定（例如：每个片段30秒、每个片段1-2分钟、每个片段3-5分钟）
+   - 片段数量：必须明确指定（例如：选择3个片段、5个片段、3-5个片段）
+   - 转场风格：快速切换/平滑过渡
 
 5. **目标受众考虑**：针对什么人群（专业人士、普通观众、营销推广）
+
+**重要提醒**：
+- 片段时长和数量必须给出具体数值，不能模糊
+- 如果用户需求中没有明确指定，请根据视频类型和内容给出合理的默认值
+- 生成的提示词将直接用于AI片段选择，必须清晰明确
 
 请以结构化的文本形式返回提示词，不要使用JSON格式。`;
 
@@ -357,11 +362,11 @@ export async function analyzeContentStep(jobId: number): Promise<void> {
       structureInfo = `\n\n内容结构标注（AI已识别的视频结构）：\n`;
       job.contentStructure.forEach((seg: any, index: number) => {
         structureInfo += `\n片段${index + 1}:\n`;
-        structureInfo += `- 演讲者: ${seg.speaker}\n`;
-        structureInfo += `- 主题: ${seg.topic}\n`;
-        structureInfo += `- 时间范围: ${seg.startTime} - ${seg.endTime}\n`;
-        structureInfo += `- 摘要: ${seg.summary}\n`;
-        structureInfo += `- 关键词: ${seg.keywords.join(', ')}\n`;
+        structureInfo += `- 演讲者: ${seg.speaker || '未知'}\n`;
+        structureInfo += `- 主题: ${seg.topic || '未知'}\n`;
+        structureInfo += `- 时间范围: ${seg.startTime || '00:00:00'} - ${seg.endTime || '00:00:00'}\n`;
+        structureInfo += `- 摘要: ${seg.summary || '无'}\n`;
+        structureInfo += `- 关键词: ${Array.isArray(seg.keywords) ? seg.keywords.join(', ') : '无'}\n`;
       });
     }
     
@@ -397,10 +402,10 @@ ${srtContent}
     await updateJobProgress(jobId, 70, '正在选择精彩片段...');
     console.log(`[Analyze] Selecting segments for job ${jobId}`);
     
-    const segmentSelectionRequest = `请根据以下分析提示词和总体脚本，从SRT字幕中选择最精彩的片段。
+    const segmentSelectionRequest = `请根据以下分析提示词和总体脚本，从SRT字幕中选择最符合要求的精彩片段。
 
 分析提示词：
-${scriptPrompt}
+${scriptPrompt}${structureInfo}
 
 总体脚本：
 ${overallScript}
@@ -412,9 +417,10 @@ ${srtContent}
 - SRT格式中的时间戳格式为 "HH:MM:SS,mmm --> HH:MM:SS,mmm"
 - 你需要根据字幕内容找到精彩片段的开始和结束时间
 - 请使用SRT中实际出现的时间戳，不要编造时间
-- 时间格式必须为 HH:MM:SS（例如：00:05:30、01:23:45）
+- 时间格式必须为 HH:MM:SS（例如：00:05:30　01:23:45）
+- **片段数量和时长必须严格遵循分析提示词中的要求**
 
-请选择3-5个最符合分析提示词的精彩片段。
+请严格按照分析提示词中指定的片段数量和时长要求选择片段。
 
 示例输出格式：
 {
@@ -539,12 +545,17 @@ export async function generatePromptOnly(jobId: number): Promise<string> {
 
 3. **内容重点方向**：需要关注的内容主题（技术细节、商业策略、案例分享等）
 
-4. **剪辑节奏建议**：
-   - 片段时长（例如：30秒/1分钟/3分钟）
-   - 片段数量（例如：3-5个精华/完整保留）
-   - 转场风格（快速切换/平滑过渡）
+4. **剪辑节奏建议**（必须明确指定具体数值）：
+   - 片段时长：必须明确指定（例如：每个片段30秒、每个片段1-2分钟、每个片段3-5分钟）
+   - 片段数量：必须明确指定（例如：选择3个片段、5个片段、3-5个片段）
+   - 转场风格：快速切换/平滑过渡
 
 5. **目标受众考虑**：针对什么人群（专业人士、普通观众、营销推广）
+
+**重要提醒**：
+- 片段时长和数量必须给出具体数值，不能模糊
+- 如果用户需求中没有明确指定，请根据视频类型和内容给出合理的默认值
+- 生成的提示词将直接用于AI片段选择，必须清晰明确
 
 请以结构化的文本形式返回提示词，不要使用JSON格式。`;
 
@@ -621,11 +632,11 @@ export async function analyzeWithCustomPrompt(
       structureInfo = `\n\n内容结构标注（AI已识别的视频结构）：\n`;
       job.contentStructure.forEach((seg: any, index: number) => {
         structureInfo += `\n片段${index + 1}:\n`;
-        structureInfo += `- 演讲者: ${seg.speaker}\n`;
-        structureInfo += `- 主题: ${seg.topic}\n`;
-        structureInfo += `- 时间范围: ${seg.startTime} - ${seg.endTime}\n`;
-        structureInfo += `- 摘要: ${seg.summary}\n`;
-        structureInfo += `- 关键词: ${seg.keywords.join(', ')}\n`;
+        structureInfo += `- 演讲者: ${seg.speaker || '未知'}\n`;
+        structureInfo += `- 主题: ${seg.topic || '未知'}\n`;
+        structureInfo += `- 时间范围: ${seg.startTime || '00:00:00'} - ${seg.endTime || '00:00:00'}\n`;
+        structureInfo += `- 摘要: ${seg.summary || '无'}\n`;
+        structureInfo += `- 关键词: ${Array.isArray(seg.keywords) ? seg.keywords.join(', ') : '无'}\n`;
       });
     }
     
@@ -661,7 +672,7 @@ ${srtContent}
     await updateJobProgress(jobId, 70, '正在选择精彩片段...');
     console.log(`[Analyze] Selecting segments for job ${jobId}`);
     
-    const segmentSelectionRequest = `请根据以下分析提示词和总体脚本，从 SRT字幕中选择最精彩的片段。
+    const segmentSelectionRequest = `请根据以下分析提示词和总体脚本，从 SRT字幕中选择最符合要求的精彩片段。
 
 分析提示词：
 ${scriptPrompt}${structureInfo}
@@ -671,14 +682,15 @@ ${overallScript}
 
 SRT字幕内容：
 ${srtContent}
+
 重要说明：
 - SRT格式中的时间戳格式为 "HH:MM:SS,mmm --> HH:MM:SS,mmm"
 - 你需要根据字幕内容找到精彩片段的开始和结束时间
 - 请使用SRT中实际出现的时间戳，不要编造时间
-- 时间格式必须为 HH:MM:SS（例如：00:05:30、01:23:45）
+- 时间格式必须为 HH:MM:SS（例如：00:05:30　01:23:45）
+- **片段数量和时长必须严格遵循分析提示词中的要求**
 
-请选择3-5个最符合分析提示词的精彩片段。
-
+请严格按照分析提示词中指定的片段数量和时长要求选择片段。
 示例输出格式：
 {
   "segments": [

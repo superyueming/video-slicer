@@ -178,3 +178,18 @@
   - [x] 修改analyzeContentStep函数，在生成脚本时包含contentStructure信息
   - [x] 修改analyzeWithCustomPrompt函数，在选择片段时包含contentStructure信息
 - [ ] 测试完整流程
+
+## 修复步骤3 AI分析错误
+- [ ] 诊断"Unexpected token '<'"错误原因
+- [ ] 检查服务器日志找到具体错误
+- [ ] 修复服务器端代码
+- [ ] 测试验证修复
+- [ ] 保存checkpoint
+
+## 优化步骤3 AI分析提示词
+- [ ] 诊断片段选择与提示词不符的原因
+- [ ] 查看generatePromptOnly生成的提示词内容
+- [ ] 查看segmentSelectionRequest的提示词内容
+- [ ] 优化AI提示词，强调片段长度和数量要求
+- [ ] 测试验证优化效果
+- [ ] 保存checkpoint
