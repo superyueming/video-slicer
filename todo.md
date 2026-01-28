@@ -47,3 +47,7 @@
 - [x] 修复“文件读取失败”错误（reader.result为空）
 - [x] 彻底解决event.target.result为空的问题
 - [x] 深入调查File对象为何导致FileReader返回空字符串（改用FormData上传）
+
+## 任务处理问题
+- [x] 调查视频处理任务失败的原因
+- [x] 修复处理逻辑错误（subprocess参数冲突）

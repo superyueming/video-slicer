@@ -25,7 +25,7 @@ def extract_audio(video_path: str, output_audio: str) -> bool:
             '-y',
             output_audio
         ]
-        subprocess.run(cmd, check=True, capture_output=True, stderr=subprocess.DEVNULL)
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return True
     except subprocess.CalledProcessError:
         return False
@@ -50,7 +50,7 @@ def cut_video_segment(video_path: str, start: float, end: float, output_path: st
             '-y',
             output_path
         ]
-        subprocess.run(cmd, check=True, capture_output=True, stderr=subprocess.DEVNULL)
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return True
     except subprocess.CalledProcessError:
         return False
@@ -72,7 +72,7 @@ def concatenate_videos(video_paths: List[str], output_path: str) -> bool:
             '-y',
             output_path
         ]
-        subprocess.run(cmd, check=True, capture_output=True, stderr=subprocess.DEVNULL)
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return True
     except subprocess.CalledProcessError:
         return False
@@ -132,7 +132,7 @@ def burn_subtitles(video_path: str, srt_path: str, output_path: str) -> bool:
             '-y',
             output_path
         ]
-        subprocess.run(cmd, check=True, capture_output=True, stderr=subprocess.DEVNULL)
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return True
     except subprocess.CalledProcessError:
         return False
