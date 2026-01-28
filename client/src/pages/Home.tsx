@@ -64,9 +64,25 @@ export default function Home() {
       return;
     }
 
+    // 保存file引用，避免异步操作中state变化
+    const fileToUpload = videoFile;
+    
+    // 验证file对象
+    console.log('File to upload:', {
+      name: fileToUpload.name,
+      size: fileToUpload.size,
+      type: fileToUpload.type,
+      lastModified: fileToUpload.lastModified,
+    });
+    
+    if (!fileToUpload.size || fileToUpload.size === 0) {
+      toast.error("文件为空，请选择有效的视频文件");
+      return;
+    }
+
     // 文件大小检查（2GB）
     const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024;
-    if (videoFile.size > MAX_FILE_SIZE) {
+    if (fileToUpload.size > MAX_FILE_SIZE) {
       toast.error(`文件大小超过限制，最大支持2GB`);
       return;
     }
@@ -124,8 +140,10 @@ export default function Home() {
         };
         
         try {
-          reader.readAsDataURL(videoFile);
+          console.log('About to read file:', fileToUpload.name, fileToUpload.size);
+          reader.readAsDataURL(fileToUpload);
         } catch (error) {
+          console.error('readAsDataURL error:', error);
           reject(error);
         }
       });
