@@ -205,23 +205,23 @@ export default function JobStatus() {
                         {job.step !== 'uploaded' && '✅ 已完成'}
                       </p>
                     </div>
-                    {job.step === 'uploaded' && job.progress === 0 && (
-                      <Button
-                        size="sm"
-                        onClick={() => extractAudioMutation.mutate({ jobId })}
-                        disabled={extractAudioMutation.isPending}
-                      >
-                        {extractAudioMutation.isPending ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            处理中...
-                          </>
-                        ) : (
-                          '开始处理'
-                        )}
-                      </Button>
-                    )}
                     <div className="flex gap-2">
+                      {job.step === 'uploaded' && job.progress === 0 && (
+                        <Button
+                          size="sm"
+                          onClick={() => extractAudioMutation.mutate({ jobId })}
+                          disabled={extractAudioMutation.isPending}
+                        >
+                          {extractAudioMutation.isPending ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              处理中...
+                            </>
+                          ) : (
+                            '开始处理'
+                          )}
+                        </Button>
+                      )}
                       {job.step !== 'uploaded' && (
                         <Button
                           size="sm"
@@ -264,23 +264,23 @@ export default function JobStatus() {
                         {job.step === 'uploaded' && '待处理'}
                       </p>
                     </div>
-                    {job.step === 'audio_extracted' && job.progress === 0 && (
-                      <Button
-                        size="sm"
-                        onClick={() => transcribeAudioMutation.mutate({ jobId })}
-                        disabled={transcribeAudioMutation.isPending}
-                      >
-                        {transcribeAudioMutation.isPending ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            处理中...
-                          </>
-                        ) : (
-                          '开始处理'
-                        )}
-                      </Button>
-                    )}
                     <div className="flex gap-2">
+                      {job.step === 'audio_extracted' && job.progress === 0 && (
+                        <Button
+                          size="sm"
+                          onClick={() => transcribeAudioMutation.mutate({ jobId })}
+                          disabled={transcribeAudioMutation.isPending}
+                        >
+                          {transcribeAudioMutation.isPending ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              处理中...
+                            </>
+                          ) : (
+                            '开始处理'
+                          )}
+                        </Button>
+                      )}
                       {job.step === 'transcribed' && (
                         <Button
                           size="sm"
