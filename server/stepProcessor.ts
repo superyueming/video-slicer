@@ -42,17 +42,17 @@ export async function extractAudioStep(jobId: number): Promise<void> {
     
     // 2. 提取音频
     await updateJobProgress(jobId, 50, '正在提取音频...');
-    const audioPath = path.join(tempDir, 'audio.wav');
+    const audioPath = path.join(tempDir, 'audio.mp3');  // 改为.mp3
     await extractAudio(videoPath, audioPath);
     tempFiles.push(audioPath);
     
     // 3. 上传音频到S3
     await updateJobProgress(jobId, 80, '正在保存音频...');
-    const audioKey = `audio/${job.userId}/${jobId}-audio.wav`;
+    const audioKey = `audio/${job.userId}/${jobId}-audio.mp3`;  // 改为.mp3
     
     // 读取音频文件
     const audioBuffer = await fs.readFile(audioPath);
-    const { url: audioUrl } = await storagePut(audioKey, audioBuffer, 'audio/wav');
+    const { url: audioUrl } = await storagePut(audioKey, audioBuffer, 'audio/mpeg');  // 改为audio/mpeg
     
     console.log(`[ExtractAudio] Audio uploaded to: ${audioUrl}`);
     
@@ -127,7 +127,7 @@ export async function transcribeAudioStep(jobId: number): Promise<void> {
   try {
     // 1. 下载音频
     await updateJobProgress(jobId, 10, '正在下载音频...');
-    const audioPath = path.join(tempDir, 'audio.wav');
+    const audioPath = path.join(tempDir, 'audio.mp3');  // 改为.mp3以匹配实际格式
     
     const audioResponse = await fetch(job.audioUrl);
     if (!audioResponse.ok) {

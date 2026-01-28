@@ -18,10 +18,11 @@ def extract_audio(video_path: str, output_audio: str) -> Dict:
     try:
         cmd = [
             'ffmpeg', '-i', video_path,
-            '-vn',
-            '-acodec', 'pcm_s16le',
-            '-ar', '16000',
-            '-ac', '1',
+            '-vn',  # 不包含视频
+            '-acodec', 'libmp3lame',  # 使用MP3编码器
+            '-ar', '16000',  # 采样率16kHz（Whisper推荐）
+            '-ac', '1',  # 单声道
+            '-b:a', '32k',  # 比特率32kbps（足够语音识别）
             '-y',
             output_audio
         ]
