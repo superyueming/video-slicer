@@ -83,10 +83,33 @@ export async function extractAudio(videoPath: string, outputAudioPath: string): 
 }
 
 /**
- * 使用Whisper转录音频
+ * 使用Whisper转录音频（使用在线API避免内存不足）
  */
 export async function transcribeAudio(audioPath: string): Promise<TranscriptResult> {
-  return await runPythonCommand('transcribe', audioPath);
+  // 导入内置的voiceTranscription helper
+  const { transcribeAudio: transcribeAudioAPI } = await import('./_core/voiceTranscription');
+  const { storagePut } = await import('./storage');
+  const fs = await import('fs/promises');
+  
+  // 1. 上传音频文件到S3获取URL
+  const audioBuffer = await fs.readFile(audioPath);
+  const audioKey = `temp-audio/${Date.now()}-${Math.random().toString(36).slice(2)}.wav`;
+  const { url: audioUrl } = await storagePut(audioKey, audioBuffer, 'audio/wav');
+  
+  // 2. 调用在线Whisper API
+  const result = await transcribeAudioAPI({
+    audioUrl,
+    language: 'zh',
+    prompt: '请转录这段中文演讲内容'
+  });
+  
+  // 3. 检查是否有错误
+  if ('error' in result) {
+    throw new Error(`Transcription failed: ${result.error}`);
+  }
+  
+  // 4. 返回结果（格式已经兼容）
+  return result as TranscriptResult;
 }
 
 /**
