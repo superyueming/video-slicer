@@ -72,7 +72,7 @@ router.post('/upload-video', upload.single('video'), async (req, res) => {
       success: true,
       fileKey,
       url,
-      filename: originalFilename, // 保留原始文件名用于显示
+      filename: safeFilename, // 使用简化后的文件名，与S3键一致
       size: file.size,
       contentType: file.mimetype,
     });
