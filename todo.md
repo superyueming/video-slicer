@@ -77,3 +77,6 @@
 - [x] 修改转录输出为SRT格式带时间戳
 - [x] 实现步骤3（AI内容分析）的UI显示
 - [x] 实现步骤3的后端API和处理逻辑
+
+## JobStatus页面错误修复
+- [x] 修复null值调用toFixed()导致的TypeError

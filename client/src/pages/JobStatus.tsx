@@ -415,7 +415,7 @@ export default function JobStatus() {
               <div className="flex justify-between">
                 <span className="text-muted-foreground">文件大小：</span>
                 <span className="font-medium">
-                  {(job.fileSize / 1024 / 1024).toFixed(2)} MB
+                  {job.fileSize ? (job.fileSize / 1024 / 1024).toFixed(2) : '0'} MB
                 </span>
               </div>
               <div className="flex justify-between">
@@ -465,7 +465,7 @@ export default function JobStatus() {
                         <div className="flex justify-between mb-1">
                           <span className="font-medium">片段 {idx + 1}</span>
                           <span className="text-muted-foreground">
-                            {seg.start.toFixed(1)}s - {seg.end.toFixed(1)}s
+                            {seg.start?.toFixed(1) || '0'}s - {seg.end?.toFixed(1) || '0'}s
                           </span>
                         </div>
                         <p className="text-muted-foreground">{seg.reason}</p>
