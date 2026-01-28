@@ -76,9 +76,10 @@ export default function Home() {
     try {
       // 读取文件为Base64（带进度）
       toast.info("正在读取文件...");
-      const reader = new FileReader();
       
       const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        
         reader.onprogress = (e) => {
           if (e.lengthComputable) {
             const percentComplete = Math.round((e.loaded / e.total) * 50); // 读取占总进度50%
@@ -88,13 +89,29 @@ export default function Home() {
         
         reader.onload = () => {
           const result = reader.result as string;
+          if (!result) {
+            reject(new Error('文件读取失败'));
+            return;
+          }
           const base64 = result.split(",")[1];
+          if (!base64) {
+            reject(new Error('Base64编码失败'));
+            return;
+          }
           setUploadProgress(50);
           resolve(base64);
         };
         
-        reader.onerror = reject;
-        reader.readAsDataURL(videoFile);
+        reader.onerror = (error) => {
+          console.error('FileReader error:', error);
+          reject(new Error('文件读取错误'));
+        };
+        
+        try {
+          reader.readAsDataURL(videoFile);
+        } catch (error) {
+          reject(error);
+        }
       });
 
       // 上传视频
