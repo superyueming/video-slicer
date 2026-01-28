@@ -166,7 +166,7 @@ export const videoRouter = router({
 /**
  * 异步处理视频任务
  */
-async function processVideoAsync(jobId: number): Promise<void> {
+export async function processVideoAsync(jobId: number): Promise<void> {
   const job = await getVideoJob(jobId);
   if (!job) throw new Error('Job not found');
   
@@ -177,9 +177,18 @@ async function processVideoAsync(jobId: number): Promise<void> {
     // 1. 下载视频
     await updateJobProgress(jobId, 5, '正在下载视频...');
     const videoPath = path.join(tempDir, 'input.mp4');
+    console.log(`Downloading video from: ${job.originalVideoUrl}`);
     const videoResponse = await fetch(job.originalVideoUrl);
+    if (!videoResponse.ok) {
+      throw new Error(`Failed to download video: ${videoResponse.status} ${videoResponse.statusText}`);
+    }
     const videoBuffer = Buffer.from(await videoResponse.arrayBuffer());
+    console.log(`Downloaded video size: ${videoBuffer.length} bytes, expected: ${job.fileSize} bytes`);
+    if (videoBuffer.length !== job.fileSize) {
+      throw new Error(`Video size mismatch: downloaded ${videoBuffer.length} bytes, expected ${job.fileSize} bytes`);
+    }
     await fs.writeFile(videoPath, videoBuffer);
+    console.log(`Video saved to: ${videoPath}`);
     tempFiles.push(videoPath);
     
     // 2. 提取音频

@@ -42,16 +42,30 @@ async function runPythonCommand(command: string, ...args: string[]): Promise<any
     return `'${arg}'`;
   });
   
-  const cmd = `python3 ${PYTHON_SCRIPT} ${command} ${escapedArgs.join(' ')}`;
+  const cmd = `python3.11 ${PYTHON_SCRIPT} ${command} ${escapedArgs.join(' ')}`;
   
   try {
-    const { stdout, stderr } = await execAsync(cmd, { maxBuffer: 50 * 1024 * 1024 }); // 50MB buffer
+    // 清除Python环境变量，避免加载错误的Python库
+    const cleanEnv = { ...process.env };
+    delete cleanEnv.PYTHONPATH;
+    delete cleanEnv.PYTHONHOME;
+    delete cleanEnv.VIRTUAL_ENV;
     
+    const { stdout, stderr } = await execAsync(cmd, { 
+      maxBuffer: 50 * 1024 * 1024,
+      env: cleanEnv
+    });
+    
+    console.log('Python stdout:', stdout);
     if (stderr && !stderr.includes('Warning')) {
       console.error('Python stderr:', stderr);
     }
     
-    return JSON.parse(stdout);
+    const result = JSON.parse(stdout);
+    if (!result.success && result.error) {
+      console.error('Python script error:', result.error);
+    }
+    return result;
   } catch (error: any) {
     console.error('Python command failed:', error);
     throw new Error(`Video processing failed: ${error.message}`);

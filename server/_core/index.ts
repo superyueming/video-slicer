@@ -8,6 +8,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import uploadRoute from "../uploadRoute";
+import { processPendingJobs } from "../jobProcessor";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -62,6 +63,11 @@ async function startServer() {
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
+    
+    // 启动后处理pending任务
+    setTimeout(() => {
+      processPendingJobs().catch(console.error);
+    }, 2000); // 延迟2秒，确保服务器完全启动
   });
 }
 

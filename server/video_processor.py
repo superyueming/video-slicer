@@ -13,7 +13,7 @@ from typing import List, Dict
 import whisper
 
 
-def extract_audio(video_path: str, output_audio: str) -> bool:
+def extract_audio(video_path: str, output_audio: str) -> Dict:
     """从视频中提取音频"""
     try:
         cmd = [
@@ -25,10 +25,14 @@ def extract_audio(video_path: str, output_audio: str) -> bool:
             '-y',
             output_audio
         ]
-        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return True
-    except subprocess.CalledProcessError:
-        return False
+        result = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        return {"success": True}
+    except subprocess.CalledProcessError as e:
+        # 只保留最后1000个字符，因为真正的错误信息在最后
+        error_msg = e.stderr[-1000:] if len(e.stderr) > 1000 else e.stderr
+        return {"success": False, "error": f"FFmpeg error: {error_msg}"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
 def transcribe_audio_whisper(audio_path: str) -> Dict:
@@ -150,8 +154,8 @@ def main():
         if command == "extract_audio":
             video_path = sys.argv[2]
             output_audio = sys.argv[3]
-            success = extract_audio(video_path, output_audio)
-            print(json.dumps({"success": success}))
+            result = extract_audio(video_path, output_audio)
+            print(json.dumps(result))
         
         elif command == "transcribe":
             audio_path = sys.argv[2]
