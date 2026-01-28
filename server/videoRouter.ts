@@ -1,10 +1,11 @@
 import { z } from 'zod';
-import { protectedProcedure, router } from './_core/trpc';
+import { protectedProcedure, router, publicProcedure } from './_core/trpc';
 import { createVideoJob, getUserVideoJobs, getVideoJob, updateJobProgress, markJobCompleted, markJobFailed } from './videoDb';
 import { storagePut } from './storage';
 import path from 'path';
 import fs from 'fs/promises';
 import os from 'os';
+import { nanoid } from 'nanoid';
 import { 
   extractAudio, 
   transcribeAudio, 
@@ -31,12 +32,19 @@ export const videoRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { filename, contentType, fileSize, base64Data } = input;
       
+      // 文件大小限制（100MB）
+      const MAX_FILE_SIZE = 100 * 1024 * 1024;
+      if (fileSize > MAX_FILE_SIZE) {
+        throw new Error(`文件大小超过限制（最大100MB）`);
+      }
+      
       // 解码Base64数据
       const fileBuffer = Buffer.from(base64Data, 'base64');
       
       // 生成S3存储键
       const timestamp = Date.now();
-      const fileKey = `videos/${ctx.user.id}/${timestamp}-${filename}`;
+      const randomId = nanoid(10);
+      const fileKey = `videos/${ctx.user.id}/${timestamp}-${randomId}-${filename}`;
       
       // 上传到S3
       const { url } = await storagePut(fileKey, fileBuffer, contentType);

@@ -53,18 +53,25 @@ export default function Home() {
 
   const handleSubmit = async () => {
     if (!videoFile) {
-      toast.error("请先上传视频");
+      toast.error("请先上传视频文件");
       return;
     }
 
     if (!requirement.trim()) {
-      toast.error("请输入您的需求");
+      toast.error("请描述您的需求");
       return;
     }
 
-    try {
-      setIsUploading(true);
+    // 文件大小检查（100MB）
+    const MAX_FILE_SIZE = 100 * 1024 * 1024;
+    if (videoFile.size > MAX_FILE_SIZE) {
+      toast.error(`文件大小超过限制，最大支持100MB`);
+      return;
+    }
 
+    setIsUploading(true);
+
+    try {
       // 读取文件为Base64
       const reader = new FileReader();
       const base64Promise = new Promise<string>((resolve, reject) => {
@@ -103,7 +110,19 @@ export default function Home() {
       setLocation(`/job/${jobResult.jobId}`);
     } catch (error: any) {
       console.error("提交失败:", error);
-      toast.error(error.message || "提交失败，请重试");
+      
+      // 更好的错误提示
+      let errorMessage = "提交失败，请重试";
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error instanceof ProgressEvent) {
+        errorMessage = "网络连接失败，请检查网络后重试";
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsUploading(false);
     }
