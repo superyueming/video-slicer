@@ -315,7 +315,7 @@ export default function JobStatus() {
                           )}
                         </Button>
                       )}
-                      {(job.step === 'transcribed' || (job.step === 'audio_extracted' && job.progress > 0)) && (
+                      {job.transcriptUrl && (
                         <Button
                           size="sm"
                           variant="outline"
@@ -348,6 +348,7 @@ export default function JobStatus() {
                 
                 {/* 步骤3: AI内容分析 */}
                 <div className="p-4 rounded-lg border bg-card">
+
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-medium">步骤3: AI内容分析</h3>
                     {job.step === 'analyzed' && (
@@ -388,7 +389,7 @@ export default function JobStatus() {
                     )}
                     
                     {/* 重新处理按钮 */}
-                    {(job.step === 'analyzed' || (job.step === 'transcribed' && job.progress > 0)) && (
+                    {job.selectedSegments && job.selectedSegments.length > 0 && (
                       <Button
                         size="sm"
                         variant="outline"
@@ -402,7 +403,7 @@ export default function JobStatus() {
                     )}
                     
                     {/* 查看结果按钮 */}
-                    {job.step === 'analyzed' && job.selectedSegments && (
+                    {job.selectedSegments && job.selectedSegments.length > 0 && (
                       <Button
                         size="sm"
                         variant="outline"

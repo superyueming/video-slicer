@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, step, progress, status FROM video_jobs WHERE id = 2;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 28B4hwZEfm8VzTA.118e2f71f6aa --database YzKxrb3WDhX8V8hPEaRuDD --execute SELECT id, step, progress, status FROM video_jobs WHERE id = 2;",
+  "rows": [
+    {
+      "id": "2",
+      "step": "completed",
+      "progress": "100",
+      "status": "completed"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tstep\tprogress\tstatus\n2\tcompleted\t100\tcompleted\n",
+  "stderr": "",
+  "execution_time_ms": 1663
+}
