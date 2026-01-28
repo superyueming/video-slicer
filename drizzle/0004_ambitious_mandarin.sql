@@ -1,0 +1,1 @@
+ALTER TABLE `video_jobs` ADD `content_structure` json;

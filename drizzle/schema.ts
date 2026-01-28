@@ -65,6 +65,17 @@ export const videoJobs = mysqlTable("video_jobs", {
   // AI analysis results
   scriptPrompt: text("script_prompt"), // AI生成的脚本提示词
   overallScript: text("overall_script"), // 基于提示词生成的总体脚本
+  contentStructure: json("content_structure").$type<Array<{
+    id: number;
+    speaker: string;
+    topic: string;
+    startTime: string;
+    endTime: string;
+    startSeconds: number;
+    endSeconds: number;
+    summary: string;
+    keywords: string[];
+  }>>(), // 内容结构标注
   selectedSegments: json("selected_segments").$type<Array<{
     start: number;
     end: number;

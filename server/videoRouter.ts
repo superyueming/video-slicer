@@ -240,6 +240,33 @@ export const videoRouter = router({
     }),
   
   /**
+   * 步骤2.5: 内容结构标注
+   */
+  annotateStructure: protectedProcedure
+    .input(z.object({ jobId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const job = await getVideoJob(input.jobId);
+      
+      if (!job) {
+        throw new Error('Job not found');
+      }
+      
+      if (job.userId !== ctx.user.id) {
+        throw new Error('Unauthorized');
+      }
+      
+      // 导入并执行结构标注
+      const { annotateStructureStep } = await import('./stepProcessor');
+      
+      // 异步执行（不阻塞响应）
+      annotateStructureStep(input.jobId).catch(error => {
+        console.error(`AnnotateStructure ${input.jobId} failed:`, error);
+      });
+      
+      return { success: true, jobId: input.jobId };
+    }),
+  
+  /**
    * 生成分析提示词（不执行分析）
    */
   generatePrompt: protectedProcedure
@@ -329,6 +356,48 @@ export const videoRouter = router({
       await db.update(videoJobs)
         .set({
           selectedSegments: input.segments,
+        })
+        .where(eq(videoJobs.id, input.jobId));
+      
+      return { success: true };
+    }),
+  
+  /**
+   * 更新内容结构标注
+   */
+  updateContentStructure: protectedProcedure
+    .input(z.object({
+      jobId: z.number(),
+      contentStructure: z.array(z.object({
+        id: z.number(),
+        speaker: z.string(),
+        topic: z.string(),
+        startTime: z.string(),
+        endTime: z.string(),
+        startSeconds: z.number(),
+        endSeconds: z.number(),
+        summary: z.string(),
+        keywords: z.array(z.string()),
+      })),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const job = await getVideoJob(input.jobId);
+      
+      if (!job) {
+        throw new Error('Job not found');
+      }
+      
+      if (job.userId !== ctx.user.id) {
+        throw new Error('Unauthorized');
+      }
+      
+      // 更新数据库
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+      
+      await db.update(videoJobs)
+        .set({
+          contentStructure: input.contentStructure,
         })
         .where(eq(videoJobs.id, input.jobId));
       

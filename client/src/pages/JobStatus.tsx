@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
 import { AnalysisResultDialog } from '@/components/AnalysisResultDialog';
 import { PromptConfigDialog } from '@/components/PromptConfigDialog';
+import { StructureAnnotationDialog } from '@/components/StructureAnnotationDialog';
 import { useState } from "react";
 
 export default function JobStatus() {
@@ -27,6 +28,7 @@ export default function JobStatus() {
   const jobId = params?.id ? parseInt(params.id) : 0;
   const [showAnalysisDialog, setShowAnalysisDialog] = useState(false);
   const [showPromptConfigDialog, setShowPromptConfigDialog] = useState(false);
+  const [showStructureDialog, setShowStructureDialog] = useState(false);
 
   const { data: job, isLoading, refetch } = trpc.video.getJob.useQuery(
     { jobId },
@@ -74,6 +76,16 @@ export default function JobStatus() {
     },
     onError: (error) => {
       toast.error(`转录失败: ${error.message}`);
+    },
+  });
+  
+  const annotateStructureMutation = trpc.video.annotateStructure.useMutation({
+    onSuccess: () => {
+      toast.success('开始标注内容结构...');
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`标注失败: ${error.message}`);
     },
   });
   
@@ -346,6 +358,46 @@ export default function JobStatus() {
                       <p className="text-xs text-muted-foreground text-right">{job.progress}%</p>
                     </div>
                   )}
+                </div>
+                
+                {/* 步骤2.5: 内容结构标注 */}
+                <div className="space-y-2 p-3 rounded-lg bg-accent/30">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">步骤2.5: 内容结构标注</p>
+                      <p className="text-sm text-muted-foreground">
+                        {job.contentStructure ? '已完成' : '待处理'}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      {job.transcriptUrl && (
+                        <Button
+                          size="sm"
+                          onClick={() => annotateStructureMutation.mutate({ jobId })}
+                          disabled={annotateStructureMutation.isPending}
+                        >
+                          {annotateStructureMutation.isPending ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              标注中...
+                            </>
+                          ) : (
+                            job.contentStructure ? '重新标注' : '开始标注'
+                          )}
+                        </Button>
+                      )}
+                      {job.contentStructure && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setShowStructureDialog(true)}
+                        >
+                          <FileText className="w-4 h-4 mr-2" />
+                          查看结构
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 
                 {/* 步骤3: AI内容分析 */}
@@ -630,6 +682,17 @@ export default function JobStatus() {
           jobId={job.id}
           initialRequirement={job.userRequirement}
           initialPrompt={job.scriptPrompt || undefined}
+          onSuccess={refetch}
+        />
+      )}
+      
+      {/* 内容结构标注弹窗 */}
+      {job && (
+        <StructureAnnotationDialog
+          open={showStructureDialog}
+          onOpenChange={setShowStructureDialog}
+          jobId={job.id}
+          initialStructure={job.contentStructure || undefined}
           onSuccess={refetch}
         />
       )}

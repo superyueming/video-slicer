@@ -351,10 +351,24 @@ export async function analyzeContentStep(jobId: number): Promise<void> {
     await updateJobProgress(jobId, 40, '正在生成总体脚本...');
     console.log(`[Analyze] Generating overall script for job ${jobId}`);
     
+    // 构建内容结构信息（如果有）
+    let structureInfo = '';
+    if (job.contentStructure && Array.isArray(job.contentStructure) && job.contentStructure.length > 0) {
+      structureInfo = `\n\n内容结构标注（AI已识别的视频结构）：\n`;
+      job.contentStructure.forEach((seg: any, index: number) => {
+        structureInfo += `\n片段${index + 1}:\n`;
+        structureInfo += `- 演讲者: ${seg.speaker}\n`;
+        structureInfo += `- 主题: ${seg.topic}\n`;
+        structureInfo += `- 时间范围: ${seg.startTime} - ${seg.endTime}\n`;
+        structureInfo += `- 摘要: ${seg.summary}\n`;
+        structureInfo += `- 关键词: ${seg.keywords.join(', ')}\n`;
+      });
+    }
+    
     const scriptGenerationRequest = `请根据以下分析提示词和字幕内容，生成一个完整的视频内容脚本。
 
 分析提示词：
-${scriptPrompt}
+${scriptPrompt}${structureInfo}
 
 SRT字幕内容：
 ${srtContent}
@@ -601,10 +615,24 @@ export async function analyzeWithCustomPrompt(
     await updateJobProgress(jobId, 40, '正在生成总体脚本...');
     console.log(`[Analyze] Generating overall script for job ${jobId}`);
     
+    // 构建内容结构信息（如果有）
+    let structureInfo = '';
+    if (job.contentStructure && Array.isArray(job.contentStructure) && job.contentStructure.length > 0) {
+      structureInfo = `\n\n内容结构标注（AI已识别的视频结构）：\n`;
+      job.contentStructure.forEach((seg: any, index: number) => {
+        structureInfo += `\n片段${index + 1}:\n`;
+        structureInfo += `- 演讲者: ${seg.speaker}\n`;
+        structureInfo += `- 主题: ${seg.topic}\n`;
+        structureInfo += `- 时间范围: ${seg.startTime} - ${seg.endTime}\n`;
+        structureInfo += `- 摘要: ${seg.summary}\n`;
+        structureInfo += `- 关键词: ${seg.keywords.join(', ')}\n`;
+      });
+    }
+    
     const scriptGenerationRequest = `请根据以下分析提示词和字幕内容，生成一个完整的视频内容脚本。
 
 分析提示词：
-${scriptPrompt}
+${scriptPrompt}${structureInfo}
 
 SRT字幕内容：
 ${srtContent}
@@ -633,17 +661,16 @@ ${srtContent}
     await updateJobProgress(jobId, 70, '正在选择精彩片段...');
     console.log(`[Analyze] Selecting segments for job ${jobId}`);
     
-    const segmentSelectionRequest = `请根据以下分析提示词和总体脚本，从SRT字幕中选择最精彩的片段。
+    const segmentSelectionRequest = `请根据以下分析提示词和总体脚本，从 SRT字幕中选择最精彩的片段。
 
 分析提示词：
-${scriptPrompt}
+${scriptPrompt}${structureInfo}
 
 总体脚本：
 ${overallScript}
 
 SRT字幕内容：
 ${srtContent}
-
 重要说明：
 - SRT格式中的时间戳格式为 "HH:MM:SS,mmm --> HH:MM:SS,mmm"
 - 你需要根据字幕内容找到精彩片段的开始和结束时间
@@ -875,6 +902,157 @@ export async function generateClipsStep(jobId: number): Promise<void> {
         .where(eq(videoJobs.id, jobId));
     }
     
+    throw error;
+  }
+}
+
+/**
+ * 步骤2.5: 内容结构标注
+ * 使用AI识别视频内容的结构化片段（演讲者、主题、时间段）
+ */
+export async function annotateStructureStep(jobId: number): Promise<void> {
+  const job = await getVideoJob(jobId);
+  if (!job) throw new Error('Job not found');
+  
+  if (!job.transcriptUrl) {
+    throw new Error('Transcript not found. Please complete step 2 first.');
+  }
+  
+  try {
+    await updateJobProgress(jobId, 10, '正在下载字幕文件...');
+    
+    // 1. 下载SRT字幕文件
+    const srtResponse = await fetch(job.transcriptUrl);
+    if (!srtResponse.ok) {
+      throw new Error(`Failed to download transcript: ${srtResponse.status}`);
+    }
+    const srtContent = await srtResponse.text();
+    
+    await updateJobProgress(jobId, 30, '正在分析视频内容结构...');
+    
+    // 2. 使用AI分析内容结构
+    const { invokeLLM } = await import('./_core/llm');
+    
+    const prompt = `你是一个视频内容结构分析专家。请分析以下SRT字幕文件，识别视频中的结构化片段。
+
+SRT字幕内容：
+\`\`\`
+${srtContent}
+\`\`\`
+
+请按照以下要求进行分析：
+
+1. **识别演讲者/主题片段**：根据内容变化识别不同的演讲者或主题段落
+2. **提取时间范围**：从SRT时间戳中提取每个片段的开始和结束时间
+3. **生成摘要**：为每个片段生成简短的内容摘要（20-50字）
+4. **提取关键词**：为每个片段提取3-5个关键词
+
+**重要提示**：
+- 时间格式必须严格从SRT中提取，格式为"HH:MM:SS"（例如："01:20:59"）
+- startSeconds和endSeconds是秒数（例如：4859）
+- 如果无法确定演讲者姓名，使用"演讲者1"、"演讲者2"等
+- 主题应该简洁明了（5-15字）
+
+请以JSON格式返回结果，格式如下：
+\`\`\`json
+{
+  "segments": [
+    {
+      "id": 1,
+      "speaker": "主持人",
+      "topic": "开场介绍",
+      "startTime": "00:00:00",
+      "endTime": "00:02:30",
+      "startSeconds": 0,
+      "endSeconds": 150,
+      "summary": "主持人介绍本次峰会主题和嘉宾阵容",
+      "keywords": ["AI峰会", "嘉宾介绍", "开场"]
+    }
+  ]
+}
+\`\`\``;
+
+    const response = await invokeLLM({
+      messages: [
+        { role: 'system', content: '你是一个专业的视频内容结构分析专家，擅长从字幕中识别演讲者、主题和时间段。' },
+        { role: 'user', content: prompt }
+      ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'content_structure',
+          strict: true,
+          schema: {
+            type: 'object',
+            properties: {
+              segments: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'number' },
+                    speaker: { type: 'string' },
+                    topic: { type: 'string' },
+                    startTime: { type: 'string' },
+                    endTime: { type: 'string' },
+                    startSeconds: { type: 'number' },
+                    endSeconds: { type: 'number' },
+                    summary: { type: 'string' },
+                    keywords: {
+                      type: 'array',
+                      items: { type: 'string' }
+                    }
+                  },
+                  required: ['id', 'speaker', 'topic', 'startTime', 'endTime', 'startSeconds', 'endSeconds', 'summary', 'keywords'],
+                  additionalProperties: false
+                }
+              }
+            },
+            required: ['segments'],
+            additionalProperties: false
+          }
+        }
+      }
+    });
+
+    await updateJobProgress(jobId, 80, '正在保存标注结果...');
+    
+    // 3. 解析AI返回的结果
+    const content = response.choices[0].message.content;
+    if (!content || typeof content !== 'string') {
+      throw new Error('AI returned empty or invalid content');
+    }
+    
+    const structureData = JSON.parse(content);
+    console.log(`[AnnotateStructure] AI identified ${structureData.segments.length} segments`);
+    
+    // 4. 保存到数据库
+    const db = await getDb();
+    if (!db) throw new Error('Database not available');
+    
+    await db.update(videoJobs)
+      .set({
+        contentStructure: structureData.segments,
+        progress: 100,
+        currentStep: '内容结构标注完成',
+        updatedAt: new Date()
+      })
+      .where(eq(videoJobs.id, jobId));
+    
+    console.log(`[AnnotateStructure] Job ${jobId} structure annotation completed`);
+    
+  } catch (error) {
+    console.error(`[AnnotateStructure] Job ${jobId} failed:`, error);
+    const db = await getDb();
+    if (db) {
+      await db.update(videoJobs)
+        .set({
+          status: 'failed',
+          errorMessage: error instanceof Error ? error.message : 'Unknown error during structure annotation',
+          updatedAt: new Date()
+        })
+        .where(eq(videoJobs.id, jobId));
+    }
     throw error;
   }
 }

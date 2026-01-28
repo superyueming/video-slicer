@@ -163,3 +163,18 @@
 - [x] 检查analyzeWithPrompt API是否正确更新状态
 - [x] 修复进度显示逻辑（添加onSuccess回调刷新job数据）
 - [x] 测试完整的配置分析流程
+
+## 步骤2.5内容结构标注功能
+- [x] 设计数据库schema（添加contentStructure字段存储标注结果）
+- [x] 添加annotateStructure API（AI识别视频内容结构）
+- [x] 添加updateContentStructure API（更新标注结果）
+- [x] 运行pnpm db:push同步数据库schema
+- [x] 重启服务器应用schema更改
+- [x] 创建StructureAnnotationDialog组件（查看和编辑标注结果）
+- [x] 添加annotateStructureMutation到JobStatus页面
+- [x] 在步骤2完成后显示“标注内容结构”按钮
+- [x] 添加StructureAnnotationDialog弹窗到JobStatus页面
+- [x] 修改步骤3的AI分析，使用标注结果提升准确性
+  - [x] 修改analyzeContentStep函数，在生成脚本时包含contentStructure信息
+  - [x] 修改analyzeWithCustomPrompt函数，在选择片段时包含contentStructure信息
+- [ ] 测试完整流程
