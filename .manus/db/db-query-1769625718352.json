@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, script_prompt, overall_script FROM video_jobs WHERE id = 2;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 28B4hwZEfm8VzTA.118e2f71f6aa --database YzKxrb3WDhX8V8hPEaRuDD --execute SELECT id, script_prompt, overall_script FROM video_jobs WHERE id = 2;",
+  "rows": [
+    {
+      "id": "2",
+      "script_prompt": "NULL",
+      "overall_script": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tscript_prompt\toverall_script\n2\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1527
+}

@@ -240,6 +240,66 @@ export const videoRouter = router({
     }),
   
   /**
+   * 生成分析提示词（不执行分析）
+   */
+  generatePrompt: protectedProcedure
+    .input(z.object({ jobId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const job = await getVideoJob(input.jobId);
+      
+      if (!job) {
+        throw new Error('Job not found');
+      }
+      
+      if (job.userId !== ctx.user.id) {
+        throw new Error('Unauthorized');
+      }
+      
+      // 导入并执行提示词生成
+      const { generatePromptOnly } = await import('./stepProcessor');
+      
+      const scriptPrompt = await generatePromptOnly(input.jobId);
+      
+      return { 
+        success: true, 
+        jobId: input.jobId,
+        userRequirement: job.userRequirement,
+        scriptPrompt 
+      };
+    }),
+  
+  /**
+   * 使用指定提示词进行分析
+   */
+  analyzeWithPrompt: protectedProcedure
+    .input(z.object({ 
+      jobId: z.number(),
+      userRequirement: z.string(),
+      scriptPrompt: z.string()
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const job = await getVideoJob(input.jobId);
+      
+      if (!job) {
+        throw new Error('Job not found');
+      }
+      
+      if (job.userId !== ctx.user.id) {
+        throw new Error('Unauthorized');
+      }
+      
+      // 导入并执行AI分析
+      const { analyzeWithCustomPrompt } = await import('./stepProcessor');
+      
+      // 异步执行（不阻塞响应）
+      analyzeWithCustomPrompt(input.jobId, input.userRequirement, input.scriptPrompt).catch(error => {
+        console.error(`AnalyzeWithPrompt ${input.jobId} failed:`, error);
+      });
+      
+      return { success: true, jobId: input.jobId };
+    }),
+  
+  /**
    * 更新片段列表
    */
   updateSegments: protectedProcedure

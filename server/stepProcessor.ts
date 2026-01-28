@@ -511,6 +511,250 @@ ${srtContent}
 /**
  * 将时间字符串（HH:MM:SS）转换为秒数
  */
+/**
+ * 只生成提示词，不执行分析
+ */
+export async function generatePromptOnly(jobId: number): Promise<string> {
+  const job = await getVideoJob(jobId);
+  if (!job) throw new Error('Job not found');
+  
+  const { invokeLLM } = await import('./_core/llm');
+  
+  const promptGenerationRequest = `你是一个视频分析专家。请根据用户的需求，生成一个详细的分析提示词，用于指导后续的视频内容分析和片段选择。
+
+用户需求：${job.userRequirement}
+
+请生成一个包含以下元素的分析提示词：
+
+1. **视频类型识别**：判断这是什么类型的视频（会议演讲、教学视频、访谈、Vlog等）
+
+2. **剪辑目标定位**：明确需要提取什么内容（特定人物发言、精华观点合集、教程步骤等）
+
+3. **内容重点方向**：需要关注的内容主题（技术细节、商业策略、案例分享等）
+
+4. **剪辑节奏建议**：
+   - 片段时长（例如：30秒/1分钟/3分钟）
+   - 片段数量（例如：3-5个精华/完整保留）
+   - 转场风格（快速切换/平滑过渡）
+
+5. **目标受众考虑**：针对什么人群（专业人士、普通观众、营销推广）
+
+请以结构化的文本形式返回提示词，不要使用JSON格式。`;
+
+  const promptResponse = await invokeLLM({
+    messages: [
+      { role: 'system', content: '你是一个专业的视频分析专家。' },
+      { role: 'user', content: promptGenerationRequest }
+    ]
+  });
+  
+  const scriptPrompt = promptResponse.choices[0].message.content;
+  if (typeof scriptPrompt !== 'string') {
+    throw new Error('Unexpected LLM response format for script prompt');
+  }
+  
+  // 保存到数据库
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  
+  await db.update(videoJobs)
+    .set({ scriptPrompt })
+    .where(eq(videoJobs.id, jobId));
+  
+  return scriptPrompt;
+}
+
+/**
+ * 使用自定义提示词进行分析
+ */
+export async function analyzeWithCustomPrompt(
+  jobId: number, 
+  userRequirement: string, 
+  scriptPrompt: string
+): Promise<void> {
+  const job = await getVideoJob(jobId);
+  if (!job) throw new Error('Job not found');
+  
+  if (!job.transcriptUrl) {
+    throw new Error('Transcript URL not found');
+  }
+  
+  try {
+    // 1. 下载SRT字幕文件
+    await updateJobProgress(jobId, 10, '正在下载字幕文件...');
+    const transcriptResponse = await fetch(job.transcriptUrl);
+    if (!transcriptResponse.ok) {
+      throw new Error(`Failed to download transcript: ${transcriptResponse.status}`);
+    }
+    
+    const srtContent = await transcriptResponse.text();
+    const { invokeLLM } = await import('./_core/llm');
+    
+    // 更新userRequirement
+    const db = await getDb();
+    if (!db) throw new Error('Database not available');
+    
+    await db.update(videoJobs)
+      .set({ 
+        userRequirement,
+        scriptPrompt,
+        step: 'transcribed',
+        progress: 0,
+        status: 'pending'
+      })
+      .where(eq(videoJobs.id, jobId));
+    
+    // 阶段2: 生成总体脚本
+    await updateJobProgress(jobId, 40, '正在生成总体脚本...');
+    console.log(`[Analyze] Generating overall script for job ${jobId}`);
+    
+    const scriptGenerationRequest = `请根据以下分析提示词和字幕内容，生成一个完整的视频内容脚本。
+
+分析提示词：
+${scriptPrompt}
+
+SRT字幕内容：
+${srtContent}
+
+请生成一个结构化的视频内容脚本，包括：
+1. 视频整体概述
+2. 主要内容结构（分段描述）
+3. 关键信息提取
+
+请以文本形式返回，不要使用JSON格式。`;
+    
+    const scriptResponse = await invokeLLM({
+      messages: [
+        { role: 'system', content: '你是一个专业的视频内容分析助手。' },
+        { role: 'user', content: scriptGenerationRequest }
+      ]
+    });
+    
+    const overallScript = scriptResponse.choices[0].message.content;
+    if (typeof overallScript !== 'string') {
+      throw new Error('Unexpected LLM response format for overall script');
+    }
+    console.log(`[Analyze] Generated overall script, length: ${overallScript.length}`);
+    
+    // 阶段3: 选择精彩片段
+    await updateJobProgress(jobId, 70, '正在选择精彩片段...');
+    console.log(`[Analyze] Selecting segments for job ${jobId}`);
+    
+    const segmentSelectionRequest = `请根据以下分析提示词和总体脚本，从SRT字幕中选择最精彩的片段。
+
+分析提示词：
+${scriptPrompt}
+
+总体脚本：
+${overallScript}
+
+SRT字幕内容：
+${srtContent}
+
+重要说明：
+- SRT格式中的时间戳格式为 "HH:MM:SS,mmm --> HH:MM:SS,mmm"
+- 你需要根据字幕内容找到精彩片段的开始和结束时间
+- 请使用SRT中实际出现的时间戳，不要编造时间
+- 时间格式必须为 HH:MM:SS（例如：00:05:30、01:23:45）
+
+请选择3-5个最符合分析提示词的精彩片段。
+
+示例输出格式：
+{
+  "segments": [
+    {
+      "start_time": "00:05:30",
+      "end_time": "00:07:15",
+      "reason": "这个片段介绍了..."
+    }
+  ]
+}
+
+请以JSON格式返回结果。`;
+    
+    const segmentResponse = await invokeLLM({
+      messages: [
+        { role: 'system', content: '你是一个专业的视频内容分析助手，擅长从长视频中提取精彩片段。' },
+        { role: 'user', content: segmentSelectionRequest }
+      ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'video_segments',
+          strict: true,
+          schema: {
+            type: 'object',
+            properties: {
+              segments: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    start_time: { type: 'string', description: '开始时间 HH:MM:SS' },
+                    end_time: { type: 'string', description: '结束时间 HH:MM:SS' },
+                    reason: { type: 'string', description: '选择理由' }
+                  },
+                  required: ['start_time', 'end_time', 'reason'],
+                  additionalProperties: false
+                }
+              }
+            },
+            required: ['segments'],
+            additionalProperties: false
+          }
+        }
+      }
+    });
+    
+    const segmentContent = segmentResponse.choices[0].message.content;
+    if (typeof segmentContent !== 'string') {
+      throw new Error('Unexpected LLM response format for segments');
+    }
+    const analysisResult = JSON.parse(segmentContent);
+    console.log(`[Analyze] AI selected ${analysisResult.segments.length} segments`);
+    
+    // 3. 转换时间格式并保存结果
+    await updateJobProgress(jobId, 90, '正在保存分析结果...');
+    
+    const selectedSegments = analysisResult.segments.map((seg: any) => ({
+      start: timeStringToSeconds(seg.start_time),
+      end: timeStringToSeconds(seg.end_time),
+      reason: seg.reason
+    }));
+    
+    // 4. 更新数据库
+    await db.update(videoJobs)
+      .set({
+        scriptPrompt,
+        overallScript,
+        selectedSegments,
+        step: 'analyzed',
+        progress: 0,
+        currentStep: 'AI分析完成，等待生成视频',
+        status: 'completed',
+      })
+      .where(eq(videoJobs.id, jobId));
+    
+    console.log(`[Analyze] Job ${jobId} analysis completed with custom prompt`);
+    
+  } catch (error: any) {
+    console.error(`[Analyze] Job ${jobId} failed:`, error);
+    
+    const db = await getDb();
+    if (db) {
+      await db.update(videoJobs)
+        .set({
+          status: 'failed',
+          errorMessage: error.message,
+          currentStep: '分析失败',
+        })
+        .where(eq(videoJobs.id, jobId));
+    }
+    
+    throw error;
+  }
+}
+
 function timeStringToSeconds(timeStr: string): number {
   const parts = timeStr.split(':').map(Number);
   if (parts.length === 3) {

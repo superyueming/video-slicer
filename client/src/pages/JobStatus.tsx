@@ -17,7 +17,8 @@ import {
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
-import { AnalysisResultDialog } from "@/components/AnalysisResultDialog";
+import { AnalysisResultDialog } from '@/components/AnalysisResultDialog';
+import { PromptConfigDialog } from '@/components/PromptConfigDialog';
 import { useState } from "react";
 
 export default function JobStatus() {
@@ -25,6 +26,7 @@ export default function JobStatus() {
   const [, setLocation] = useLocation();
   const jobId = params?.id ? parseInt(params.id) : 0;
   const [showAnalysisDialog, setShowAnalysisDialog] = useState(false);
+  const [showPromptConfigDialog, setShowPromptConfigDialog] = useState(false);
 
   const { data: job, isLoading, refetch } = trpc.video.getJob.useQuery(
     { jobId },
@@ -375,16 +377,13 @@ export default function JobStatus() {
                   
                   {/* 按钮 */}
                   <div className="flex gap-2">
-                    {/* 开始处理按钮 */}
-                    {job.step === 'transcribed' && job.progress === 0 && (
+                    {/* 配置分析按钮 */}
+                    {job.transcriptUrl && !job.selectedSegments && (
                       <Button
                         size="sm"
-                        onClick={() => {
-                          analyzeContentMutation.mutate({ jobId: job.id });
-                        }}
-                        disabled={analyzeContentMutation.isPending}
+                        onClick={() => setShowPromptConfigDialog(true)}
                       >
-                        {analyzeContentMutation.isPending ? '处理中...' : '开始处理'}
+                        配置分析
                       </Button>
                     )}
                     
@@ -620,6 +619,17 @@ export default function JobStatus() {
               segments,
             });
           }}
+        />
+      )}
+      
+      {/* 提示词配置弹窗 */}
+      {job && (
+        <PromptConfigDialog
+          open={showPromptConfigDialog}
+          onOpenChange={setShowPromptConfigDialog}
+          jobId={job.id}
+          initialRequirement={job.userRequirement}
+          initialPrompt={job.scriptPrompt || undefined}
         />
       )}
     </div>
