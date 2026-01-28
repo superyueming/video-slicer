@@ -1,0 +1,14 @@
+{
+  "query": "SELECT id, selected_segments FROM video_jobs WHERE id = 2;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 28B4hwZEfm8VzTA.118e2f71f6aa --database YzKxrb3WDhX8V8hPEaRuDD --execute SELECT id, selected_segments FROM video_jobs WHERE id = 2;",
+  "rows": [
+    {
+      "id": "2",
+      "selected_segments": "[{\"end\": 4908, \"reason\": \"Minimax的战略定位：通用大模型（AGI）和全球化战略，时长12秒，略超10秒，但信息密度高，保留。\", \"start\": 4896}, {\"end\": 4973, \"reason\": \"介绍Minimax的多模态能力，涵盖文本、语音、视频、音乐四个模态，并强调做到了国内最好水平。\", \"start\": 4958}, {\"end\": 5099, \"reason\": \"展示语音模型Speech 2.6的性能，强调全球第一、40+语言和低于250毫秒的响应速度（通过英文演示片段体现）。\", \"start\": 5090}, {\"end\": 5203, \"reason\": \"介绍视频模型在AA榜单排全球第二，以及C端产品“海螺AI”在海外的火爆程度（小猫跳水模板播放量超3亿次）。\", \"start\": 5192}, {\"end\": 5352, \"reason\": \"强调通过开放平台赋能企业，展示B端覆盖超过五万家企业的数据。\", \"start\": 5344}, {\"end\": 5408, \"reason\": \"展示C端用户规模，强调C端用户已超过1.5亿，大部分用户来自海外200多个国家，突显全球化成果。\", \"start\": 5397}, {\"end\": 5599, \"reason\": \"介绍AI在文化出海（短剧翻译配音）中的效率革命：传统3-5天的工作，AI可在几小时内完成，体现技术优势。\", \"start\": 5583}]"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tselected_segments\n2\t[{\"end\": 4908, \"reason\": \"Minimax的战略定位：通用大模型（AGI）和全球化战略，时长12秒，略超10秒，但信息密度高，保留。\", \"start\": 4896}, {\"end\": 4973, \"reason\": \"介绍Minimax的多模态能力，涵盖文本、语音、视频、音乐四个模态，并强调做到了国内最好水平。\", \"start\": 4958}, {\"end\": 5099, \"reason\": \"展示语音模型Speech 2.6的性能，强调全球第一、40+语言和低于250毫秒的响应速度（通过英文演示片段体现）。\", \"start\": 5090}, {\"end\": 5203, \"reason\": \"介绍视频模型在AA榜单排全球第二，以及C端产品“海螺AI”在海外的火爆程度（小猫跳水模板播放量超3亿次）。\", \"start\": 5192}, {\"end\": 5352, \"reason\": \"强调通过开放平台赋能企业，展示B端覆盖超过五万家企业的数据。\", \"start\": 5344}, {\"end\": 5408, \"reason\": \"展示C端用户规模，强调C端用户已超过1.5亿，大部分用户来自海外200多个国家，突显全球化成果。\", \"start\": 5397}, {\"end\": 5599, \"reason\": \"介绍AI在文化出海（短剧翻译配音）中的效率革命：传统3-5天的工作，AI可在几小时内完成，体现技术优势。\", \"start\": 5583}]\n",
+  "stderr": "",
+  "execution_time_ms": 1574
+}

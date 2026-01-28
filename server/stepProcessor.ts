@@ -416,9 +416,10 @@ SRT字幕内容：
 ${srtContent}
 
 **核心要求**：
-1. **优先使用脚本中标注的片段**：如果总体脚本中明确指出了片段编号（例如“片段14-15”、“片段24-27”），必须优先选择这些片段
-2. **精确定位时间范围**：根据SRT编号找到对应的字幕块，提取实际的开始和结束时间
-3. **遵循数量和时长要求**：严格按照分析提示词中指定的片段数量和时长要求
+1. **严格遵循结构标注约束**：如果上面提供了“视频内容结构标注”，则**必须且只能**在标注的时间范围内选择片段，不得超出该范围
+2. **优先使用脚本中标注的片段**：如果总体脚本中明确指出了片段编号（例如“片段14-15”、“片段24-27”），必须优先选择这些片段
+3. **精确定位时间范围**：根据SRT编号找到对应的字幕块，提取实际的开始和结束时间
+4. **遵循数量和时长要求**：严格按照分析提示词中指定的片段数量和时长要求
 
 **技术说明**：
 - SRT格式中的时间戳格式为 "HH:MM:SS,mmm --> HH:MM:SS,mmm"
@@ -489,8 +490,8 @@ ${srtContent}
     await updateJobProgress(jobId, 90, '正在保存分析结果...');
     
     const selectedSegments = analysisResult.segments.map((seg: any) => ({
-      start: timeStringToSeconds(seg.start_time),
-      end: timeStringToSeconds(seg.end_time),
+      start: Math.floor(timeStringToSeconds(seg.start_time)), // 开始时间向下取整
+      end: Math.ceil(timeStringToSeconds(seg.end_time)),       // 结束时间向上取整
       reason: seg.reason
     }));
     
@@ -695,9 +696,10 @@ SRT字幕内容：
 ${srtContent}
 
 **核心要求**：
-1. **优先使用脚本中标注的片段**：如果总体脚本中明确指出了片段编号（例如“片段14-15”、“片段24-27”），必须优先选择这些片段
-2. **精确定位时间范围**：根据SRT编号找到对应的字幕块，提取实际的开始和结束时间
-3. **遵循数量和时长要求**：严格按照分析提示词中指定的片段数量和时长要求
+1. **严格遵循结构标注约束**：如果上面提供了“视频内容结构标注”，则**必须且只能**在标注的时间范围内选择片段，不得超出该范围
+2. **优先使用脚本中标注的片段**：如果总体脚本中明确指出了片段编号（例如“片段14-15”、“片段24-27”），必须优先选择这些片段
+3. **精确定位时间范围**：根据SRT编号找到对应的字幕块，提取实际的开始和结束时间
+4. **遵循数量和时长要求**：严格按照分析提示词中指定的片段数量和时长要求
 
 **技术说明**：
 - SRT格式中的时间戳格式为 "HH:MM:SS,mmm --> HH:MM:SS,mmm"
@@ -767,8 +769,8 @@ ${srtContent}
     await updateJobProgress(jobId, 90, '正在保存分析结果...');
     
     const selectedSegments = analysisResult.segments.map((seg: any) => ({
-      start: timeStringToSeconds(seg.start_time),
-      end: timeStringToSeconds(seg.end_time),
+      start: Math.floor(timeStringToSeconds(seg.start_time)), // 开始时间向下取整
+      end: Math.ceil(timeStringToSeconds(seg.end_time)),       // 结束时间向上取整
       reason: seg.reason
     }));
     
@@ -833,9 +835,9 @@ export async function generateClipsStep(jobId: number): Promise<void> {
     const [job] = await db.select().from(videoJobs).where(eq(videoJobs.id, jobId));
     if (!job) throw new Error(`Job ${jobId} not found`);
     
-    // 验证步骤
-    if (job.step !== 'analyzed') {
-      throw new Error(`Invalid step: expected 'analyzed', got '${job.step}'`);
+    // 验证步骤（允许在analyzed或completed状态下生成）
+    if (job.step !== 'analyzed' && job.step !== 'completed') {
+      throw new Error(`Invalid step: expected 'analyzed' or 'completed', got '${job.step}'`);
     }
     
     if (!job.selectedSegments || job.selectedSegments.length === 0) {
@@ -887,8 +889,17 @@ export async function generateClipsStep(jobId: number): Promise<void> {
     
     const dir = path.dirname(videoPath);
     const outputPath = path.join(dir, 'final-output.mp4');
+    console.log(`[GenerateClips] Concatenating clips:`, clipPaths);
     const { concatenateVideos } = await import('./videoService.js');
     await concatenateVideos(clipPaths, outputPath);
+    
+    // 验证最终视频的实际时长
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execAsync = promisify(exec);
+    const { stdout } = await execAsync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${outputPath}"`);
+    const finalDuration = parseFloat(stdout.trim());
+    console.log(`[GenerateClips] Final video duration: ${finalDuration.toFixed(2)}s (expected: ~${clipPaths.length * 12}s)`);
     
     // 6. 上传最终视频到S3
     console.log(`[GenerateClips] Uploading final video to S3`);
@@ -897,8 +908,10 @@ export async function generateClipsStep(jobId: number): Promise<void> {
       .where(eq(videoJobs.id, jobId));
     
     const finalVideoBuffer = await fs.readFile(outputPath);
-    const videoKey = `videos/${job.userId || 'anonymous'}/${jobId}-final.mp4`;
+    const timestamp = Date.now();
+    const videoKey = `videos/${job.userId || 'anonymous'}/${jobId}-final-${timestamp}.mp4`;
     const { url: finalVideoUrl } = await storagePut(videoKey, finalVideoBuffer, 'video/mp4');
+    console.log(`[GenerateClips] Uploaded to S3: ${videoKey}, URL: ${finalVideoUrl}`);
     
     // 7. 清理临时文件
     await fs.rm(tmpDir, { recursive: true, force: true });

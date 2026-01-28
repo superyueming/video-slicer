@@ -208,3 +208,40 @@
 - [ ] 或者修改逻辑，直接从脚本中提取片段编号，不再让AI重新选择
 - [ ] 测试验证优化效果
 - [ ] 保存checkpoint
+
+## 视频拼接失败：whisper模块导入错误
+- [ ] 修复video_processor.py中不必要的whisper导入
+- [ ] 将whisper导入改为条件导入（只在transcribe时导入）
+- [ ] 测试视频拼接功能
+- [ ] 保存checkpoint
+
+## 步骤3的片段选择仍然不遵循脚本中的标注
+- [ ] 检查当前的segmentSelectionRequest提示词是否生效
+- [ ] 进一步加强提示词，使用更严格的语言
+- [ ] 或者修改逻辑，直接从脚本中提取片段编号
+- [ ] 测试验证修复
+- [ ] 保存checkpoint
+
+## 步骤4将多个片段错误合并成一个长片段
+- [ ] 检查clipVideos函数的FFmpeg命令
+- [ ] 检查concatenateVideos函数是否有合并逻辑
+- [ ] 验证每个单独的clip文件是否正确
+- [ ] 修复片段合并问题
+- [ ] 测试验证修复
+- [ ] 保存checkpoint
+
+## 视频音画不同步
+- [ ] 修改clipVideos函数，使用重新编码模式替代流复制
+- [ ] 测试验证音画同步
+- [ ] 保存checkpoint
+
+## 时间戳小数导致剪辑不完整
+- [ ] 修改时间戳转换逻辑：开始时间向下取整，结束时间向上取整
+- [ ] 测试验证剪辑完整性
+- [ ] 保存checkpoint
+
+## 步骤3未约束在步骤2.5标注的结构范围内
+- [ ] 检查segmentSelectionRequest是否正确使用了contentStructure
+- [ ] 加强提示词约束，要求AI只在标注的结构范围内选择片段
+- [ ] 测试验证约束效果
+- [ ] 保存checkpoint

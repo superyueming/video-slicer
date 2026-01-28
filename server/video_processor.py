@@ -10,7 +10,6 @@ import subprocess
 import tempfile
 from pathlib import Path
 from typing import List, Dict
-import whisper
 
 
 def extract_audio(video_path: str, output_audio: str) -> Dict:
@@ -38,6 +37,7 @@ def extract_audio(video_path: str, output_audio: str) -> Dict:
 
 def transcribe_audio_whisper(audio_path: str) -> Dict:
     """使用Whisper转录音频"""
+    import whisper  # 条件导入，只在需要时导入
     model = whisper.load_model("base")
     result = model.transcribe(audio_path, language='zh', verbose=False)
     return result

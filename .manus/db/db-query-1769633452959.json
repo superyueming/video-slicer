@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, final_video_url, updated_at FROM video_jobs WHERE id = 2;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 28B4hwZEfm8VzTA.118e2f71f6aa --database YzKxrb3WDhX8V8hPEaRuDD --execute SELECT id, final_video_url, updated_at FROM video_jobs WHERE id = 2;",
+  "rows": [
+    {
+      "id": "2",
+      "final_video_url": "https://d2xsxph8kpxj0f.cloudfront.net/310419663026865931/YzKxrb3WDhX8V8hPEaRuDD/videos/1/2-final.mp4",
+      "updated_at": "2026-01-28 20:49:50"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfinal_video_url\tupdated_at\n2\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663026865931/YzKxrb3WDhX8V8hPEaRuDD/videos/1/2-final.mp4\t2026-01-28 20:49:50\n",
+  "stderr": "",
+  "execution_time_ms": 1518
+}

@@ -293,11 +293,13 @@ export async function clipVideos(
     const clipPath = path.join(dir, `clip-${i + 1}.mp4`);
     
     // 使用FFmpeg剪辑视频片段
-    // -ss: 开始时间
+    // -ss: 开始时间（放在-i之前可以快速定位）
     // -t: 持续时间
-    // -c copy: 直接复制流，不重新编码（快速）
+    // -c:v libx264 -c:a aac: 重新编码确保音画同步
+    // -preset fast: 快速编码
+    // -crf 23: 质量控制（18-28，越小质量越好）
     const duration = seg.end - seg.start;
-    const command = `ffmpeg -ss ${seg.start} -i "${videoPath}" -t ${duration} -c copy "${clipPath}" -y`;
+    const command = `ffmpeg -ss ${seg.start} -i "${videoPath}" -t ${duration} -c:v libx264 -preset fast -crf 23 -c:a aac -b:a 128k "${clipPath}" -y`;
     
     console.log(`[ClipVideos] Clipping segment ${i + 1}/${segments.length}: ${seg.start}s - ${seg.end}s`);
     
@@ -307,7 +309,14 @@ export async function clipVideos(
           console.error(`[ClipVideos] Error clipping segment ${i + 1}:`, stderr);
           reject(new Error(`Failed to clip segment ${i + 1}: ${error.message}`));
         } else {
-          resolve();
+          // 验证clip文件的实际时长
+          exec(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${clipPath}"`, (probeError, probeStdout) => {
+            if (!probeError) {
+              const actualDuration = parseFloat(probeStdout.trim());
+              console.log(`[ClipVideos] Clip ${i + 1} actual duration: ${actualDuration.toFixed(2)}s (expected: ${duration.toFixed(2)}s)`);
+            }
+            resolve();
+          });
         }
       });
     });
