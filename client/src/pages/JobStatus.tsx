@@ -630,6 +630,7 @@ export default function JobStatus() {
           jobId={job.id}
           initialRequirement={job.userRequirement}
           initialPrompt={job.scriptPrompt || undefined}
+          onSuccess={refetch}
         />
       )}
     </div>

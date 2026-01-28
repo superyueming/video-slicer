@@ -12,6 +12,7 @@ interface PromptConfigDialogProps {
   jobId: number;
   initialRequirement: string;
   initialPrompt?: string;
+  onSuccess?: () => void;
 }
 
 export function PromptConfigDialog({
@@ -19,7 +20,8 @@ export function PromptConfigDialog({
   onOpenChange,
   jobId,
   initialRequirement,
-  initialPrompt
+  initialPrompt,
+  onSuccess
 }: PromptConfigDialogProps) {
   const [userRequirement, setUserRequirement] = useState(initialRequirement);
   const [scriptPrompt, setScriptPrompt] = useState(initialPrompt || '');
@@ -59,6 +61,7 @@ export function PromptConfigDialog({
         scriptPrompt
       });
       onOpenChange(false);
+      onSuccess?.(); // 刷新job数据
     } catch (error) {
       console.error('开始分析失败:', error);
       alert('开始分析失败，请重试');

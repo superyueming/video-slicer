@@ -157,3 +157,9 @@
 ## 配置分析按钮应该任何时候都显示
 - [x] 修改配置分析按钮的显示条件（只要有transcriptUrl就显示）
 - [x] 测试按钮在不同状态下的显示
+
+## 步骤3配置分析后没有进度显示
+- [x] 检查PromptConfigDialog中的analyzeWithPrompt调用
+- [x] 检查analyzeWithPrompt API是否正确更新状态
+- [x] 修复进度显示逻辑（添加onSuccess回调刷新job数据）
+- [x] 测试完整的配置分析流程
