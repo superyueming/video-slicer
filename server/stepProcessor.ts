@@ -325,11 +325,24 @@ export async function analyzeContentStep(jobId: number): Promise<void> {
 SRT字幕内容：
 ${srtContent}
 
+重要说明：
+- SRT格式中的时间戳格式为 "HH:MM:SS,mmm --> HH:MM:SS,mmm"
+- 你需要根据字幕内容找到精彩片段的开始和结束时间
+- 请使用SRT中实际出现的时间戳，不要编造时间
+- 时间格式必须为 HH:MM:SS（例如：00:05:30、01:23:45）
+
 请选择3-5个最符合用户需求的精彩片段，每个片段长度在30秒到2分钟之间。
-对于每个片段，请说明：
-1. 开始时间（格式：HH:MM:SS）
-2. 结束时间（格式：HH:MM:SS）
-3. 选择理由（为什么这个片段符合用户需求）
+
+示例输出格式：
+{
+  "segments": [
+    {
+      "start_time": "00:05:30",
+      "end_time": "00:07:15",
+      "reason": "这个片段介绍了..."
+    }
+  ]
+}
 
 请以JSON格式返回结果。`;
 

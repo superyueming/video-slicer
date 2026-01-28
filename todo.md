@@ -92,3 +92,10 @@
 - [x] 修改analyzeContentStep将progress重置为0
 - [x] 手动更新任务2的progress为0验证修复
 - [x] 测试完整流程确保所有步骤正常工作
+
+## 步骤4视频剪辑失败问题
+- [x] 诊断问题原因（AI返回的时间戳为null）
+- [x] 检查selectedSegments数据结构
+- [x] 修复时间戳解析逻辑
+- [x] 改进AI提示词确保返回有效时间戳
+- [x] 测试完整的视频剪辑流程
