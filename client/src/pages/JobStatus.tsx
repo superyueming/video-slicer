@@ -221,16 +221,29 @@ export default function JobStatus() {
                         )}
                       </Button>
                     )}
-                    {job.audioUrl && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => window.open(job.audioUrl!, '_blank')}
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        下载音频
-                      </Button>
-                    )}
+                    <div className="flex gap-2">
+                      {job.step !== 'uploaded' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => extractAudioMutation.mutate({ jobId })}
+                          disabled={extractAudioMutation.isPending}
+                        >
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          重新处理
+                        </Button>
+                      )}
+                      {job.audioUrl && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => window.open(job.audioUrl!, '_blank')}
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          下载音频
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   {job.step === 'uploaded' && job.progress > 0 && job.progress < 100 && (
                     <div className="space-y-1">
@@ -267,16 +280,29 @@ export default function JobStatus() {
                         )}
                       </Button>
                     )}
-                    {job.transcriptUrl && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => window.open(job.transcriptUrl!, '_blank')}
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        下载字幕
-                      </Button>
-                    )}
+                    <div className="flex gap-2">
+                      {job.step === 'transcribed' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => transcribeAudioMutation.mutate({ jobId })}
+                          disabled={transcribeAudioMutation.isPending}
+                        >
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          重新处理
+                        </Button>
+                      )}
+                      {job.transcriptUrl && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => window.open(job.transcriptUrl!, '_blank')}
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          下载字幕
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   {job.step === 'audio_extracted' && job.progress > 0 && job.progress < 100 && (
                     <div className="space-y-1">

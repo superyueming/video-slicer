@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, step, status, audio_url, audio_key, created_at FROM video_jobs WHERE id = 2;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 28B4hwZEfm8VzTA.118e2f71f6aa --database YzKxrb3WDhX8V8hPEaRuDD --execute SELECT id, step, status, audio_url, audio_key, created_at FROM video_jobs WHERE id = 2;",
+  "rows": [
+    {
+      "id": "2",
+      "step": "audio_extracted",
+      "status": "failed",
+      "audio_url": "https://d2xsxph8kpxj0f.cloudfront.net/310419663026865931/YzKxrb3WDhX8V8hPEaRuDD/audio/1/2-audio.wav",
+      "audio_key": "audio/1/2-audio.wav",
+      "created_at": "2026-01-28 10:45:52"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tstep\tstatus\taudio_url\taudio_key\tcreated_at\n2\taudio_extracted\tfailed\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663026865931/YzKxrb3WDhX8V8hPEaRuDD/audio/1/2-audio.wav\taudio/1/2-audio.wav\t2026-01-28 10:45:52\n",
+  "stderr": "",
+  "execution_time_ms": 1512
+}
