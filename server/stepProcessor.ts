@@ -4,6 +4,7 @@ import os from 'os';
 import { getVideoJob, updateJobProgress } from './videoDb';
 import { storagePut } from './storage';
 import { extractAudio, transcribeAudio } from './videoService';
+import { splitAudioIntoSegments, mergeTranscriptSegments } from './audioSegmentation';
 import { getDb } from './db';
 import { videoJobs } from '../drizzle/schema';
 import { eq } from 'drizzle-orm';
@@ -165,14 +166,54 @@ export async function transcribeAudioStep(jobId: number): Promise<void> {
     await fs.writeFile(audioPath, audioBuffer);
     tempFiles.push(audioPath);
     
-    // 2. 转录音频
-    await updateJobProgress(jobId, 30, '正在转录音频...');
-    const transcript = await transcribeAudio(audioPath);
+    // 2. 检查音频文件大小，如果超过15MB则分段处理
+    const audioStats = await fs.stat(audioPath);
+    const audioSizeMB = audioStats.size / (1024 * 1024);
+    console.log(`[Transcribe] Audio file size: ${audioSizeMB.toFixed(2)} MB`);
+    
+    let transcriptText: string;
+    
+    if (audioSizeMB > 15) {
+      // 分段处理
+      console.log(`[Transcribe] Audio exceeds 15MB, splitting into segments...`);
+      await updateJobProgress(jobId, 20, '音频文件较大，正在分段处理...');
+      
+      // 切分音频（每段56分钟 = 3360秒）
+      const segmentPaths = await splitAudioIntoSegments(audioPath, 3360);
+      console.log(`[Transcribe] Split into ${segmentPaths.length} segments`);
+      
+      // 转录每个片段
+      const segmentResults: Array<{ text: string; offset: number }> = [];
+      for (let i = 0; i < segmentPaths.length; i++) {
+        const segmentPath = segmentPaths[i];
+        const progress = 20 + Math.floor((i / segmentPaths.length) * 60);
+        await updateJobProgress(jobId, progress, `正在转录第 ${i + 1}/${segmentPaths.length} 段...`);
+        
+        const segmentTranscript = await transcribeAudio(segmentPath);
+        segmentResults.push({
+          text: segmentTranscript.text,
+          offset: i * 3360 // 时间偏移量（秒）
+        });
+        
+        // 清理临时片段文件
+        await fs.unlink(segmentPath);
+      }
+      
+      // 合并转录结果
+      transcriptText = mergeTranscriptSegments(segmentResults);
+      console.log(`[Transcribe] Merged ${segmentResults.length} segment transcripts`);
+      
+    } else {
+      // 直接转录
+      await updateJobProgress(jobId, 30, '正在转录音频...');
+      const transcript = await transcribeAudio(audioPath);
+      transcriptText = transcript.text;
+    }
     
     // 3. 保存转录结果
     await updateJobProgress(jobId, 80, '正在保存转录结果...');
-    const transcriptPath = path.join(tempDir, 'transcript.json');
-    await fs.writeFile(transcriptPath, JSON.stringify(transcript, null, 2));
+    const transcriptPath = path.join(tempDir, 'transcript.txt');
+    await fs.writeFile(transcriptPath, transcriptText);
     tempFiles.push(transcriptPath);
     
     const transcriptKey = `transcripts/${job.userId}/${jobId}-transcript.json`;
