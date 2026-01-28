@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, step, progress, status, transcript_url, selected_segments FROM video_jobs WHERE id = 2;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 28B4hwZEfm8VzTA.118e2f71f6aa --database YzKxrb3WDhX8V8hPEaRuDD --execute SELECT id, step, progress, status, transcript_url, selected_segments FROM video_jobs WHERE id = 2;",
+  "rows": [
+    {
+      "id": "2",
+      "step": "transcribed",
+      "progress": "100",
+      "status": "completed",
+      "transcript_url": "https://d2xsxph8kpxj0f.cloudfront.net/310419663026865931/YzKxrb3WDhX8V8hPEaRuDD/transcripts/1/2-transcript.srt",
+      "selected_segments": "[{\"end\": 8016, \"reason\": \"Minimax代表黄耿佳分享了AI技术发展的前沿趋势，特别是关于情感和审美的探索，以及人机协同（symbiosis）在数字创新中的核心地位，提出了'从AI到LOVE'的理念，具有高度的概括性和前瞻性。\", \"start\": 7925}, {\"end\": 9094, \"reason\": \"黄耿佳分享了AI在内容创作中如何实现'用户为本'，特别是通过与本地团队合作，进行本地化数据投喂，确保内容符合当地文化习俗，解决了AI应用中的最大难题：如何让AI懂本地，并提到了与聚玩网络合作的成功案例。\", \"start\": 8761}, {\"end\": 9426, \"reason\": \"黄耿佳总结了AI时代下中国企业出海的锦囊妙计，强调了创新是抓住新一轮效率革命的关键，并提出了'Nothing but innovation'的口号，具有强烈的号召力和总结性。\", \"start\": 9230}]"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tstep\tprogress\tstatus\ttranscript_url\tselected_segments\n2\ttranscribed\t100\tcompleted\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663026865931/YzKxrb3WDhX8V8hPEaRuDD/transcripts/1/2-transcript.srt\t[{\"end\": 8016, \"reason\": \"Minimax代表黄耿佳分享了AI技术发展的前沿趋势，特别是关于情感和审美的探索，以及人机协同（symbiosis）在数字创新中的核心地位，提出了'从AI到LOVE'的理念，具有高度的概括性和前瞻性。\", \"start\": 7925}, {\"end\": 9094, \"reason\": \"黄耿佳分享了AI在内容创作中如何实现'用户为本'，特别是通过与本地团队合作，进行本地化数据投喂，确保内容符合当地文化习俗，解决了AI应用中的最大难题：如何让AI懂本地，并提到了与聚玩网络合作的成功案例。\", \"start\": 8761}, {\"end\": 9426, \"reason\": \"黄耿佳总结了AI时代下中国企业出海的锦囊妙计，强调了创新是抓住新一轮效率革命的关键，并提出了'Nothing but innovation'的口号，具有强烈的号召力和总结性。\", \"start\": 9230}]\n",
+  "stderr": "",
+  "execution_time_ms": 1515
+}
