@@ -161,6 +161,60 @@ export const videoRouter = router({
       
       return { success: true, jobId: input.jobId };
     }),
+  
+  /**
+   * 步骤1: 提取音频
+   */
+  extractAudio: protectedProcedure
+    .input(z.object({ jobId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const job = await getVideoJob(input.jobId);
+      
+      if (!job) {
+        throw new Error('Job not found');
+      }
+      
+      if (job.userId !== ctx.user.id) {
+        throw new Error('Unauthorized');
+      }
+      
+      // 导入并执行音频提取
+      const { extractAudioStep } = await import('./stepProcessor');
+      
+      // 异步执行（不阻塞响应）
+      extractAudioStep(input.jobId).catch(error => {
+        console.error(`ExtractAudio ${input.jobId} failed:`, error);
+      });
+      
+      return { success: true, jobId: input.jobId };
+    }),
+  
+  /**
+   * 步骤2: 转录音频
+   */
+  transcribeAudio: protectedProcedure
+    .input(z.object({ jobId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const job = await getVideoJob(input.jobId);
+      
+      if (!job) {
+        throw new Error('Job not found');
+      }
+      
+      if (job.userId !== ctx.user.id) {
+        throw new Error('Unauthorized');
+      }
+      
+      // 导入并执行转录
+      const { transcribeAudioStep } = await import('./stepProcessor');
+      
+      // 异步执行（不阻塞响应）
+      transcribeAudioStep(input.jobId).catch(error => {
+        console.error(`TranscribeAudio ${input.jobId} failed:`, error);
+      });
+      
+      return { success: true, jobId: input.jobId };
+    }),
 });
 
 /**

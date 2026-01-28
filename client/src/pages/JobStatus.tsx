@@ -47,6 +47,26 @@ export default function JobStatus() {
     },
   });
   
+  const extractAudioMutation = trpc.video.extractAudio.useMutation({
+    onSuccess: () => {
+      toast.success('开始提取音频...');
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`提取失败: ${error.message}`);
+    },
+  });
+  
+  const transcribeAudioMutation = trpc.video.transcribeAudio.useMutation({
+    onSuccess: () => {
+      toast.success('开始转录音频...');
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`转录失败: ${error.message}`);
+    },
+  });
+  
   const handleRetry = () => {
     if (job?.status === 'failed') {
       retryMutation.mutate({ jobId });
@@ -166,6 +186,98 @@ export default function JobStatus() {
             )}
           </Card>
 
+          {/* Step Actions */}
+          {job.status === 'completed' && (
+            <Card className="p-6 glass-effect">
+              <h2 className="text-lg font-semibold mb-4">分步处理</h2>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-accent/30">
+                  <div>
+                    <p className="font-medium">步骤1: 提取音频</p>
+                    <p className="text-sm text-muted-foreground">
+                      {job.step === 'uploaded' ? '待处理' : '✅ 已完成'}
+                    </p>
+                  </div>
+                  {job.step === 'uploaded' && (
+                    <Button
+                      size="sm"
+                      onClick={() => extractAudioMutation.mutate({ jobId })}
+                      disabled={extractAudioMutation.isPending}
+                    >
+                      {extractAudioMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          处理中...
+                        </>
+                      ) : (
+                        '开始处理'
+                      )}
+                    </Button>
+                  )}
+                  {job.audioUrl && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(job.audioUrl!, '_blank')}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      下载音频
+                    </Button>
+                  )}
+                </div>
+                
+                <div className="flex items-center justify-between p-3 rounded-lg bg-accent/30">
+                  <div>
+                    <p className="font-medium">步骤2: 转录音频</p>
+                    <p className="text-sm text-muted-foreground">
+                      {job.step === 'uploaded' || job.step === 'audio_extracted' ? '待处理' : '✅ 已完成'}
+                    </p>
+                  </div>
+                  {job.step === 'audio_extracted' && (
+                    <Button
+                      size="sm"
+                      onClick={() => transcribeAudioMutation.mutate({ jobId })}
+                      disabled={transcribeAudioMutation.isPending}
+                    >
+                      {transcribeAudioMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          处理中...
+                        </>
+                      ) : (
+                        '开始处理'
+                      )}
+                    </Button>
+                  )}
+                  {job.transcriptUrl && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(job.transcriptUrl!, '_blank')}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      下载字幕
+                    </Button>
+                  )}
+                </div>
+                
+                <div className="flex items-center justify-between p-3 rounded-lg bg-accent/30">
+                  <div>
+                    <p className="font-medium">步骤3: AI分析</p>
+                    <p className="text-sm text-muted-foreground">待实现</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 rounded-lg bg-accent/30">
+                  <div>
+                    <p className="font-medium">步骤4: 生成视频</p>
+                    <p className="text-sm text-muted-foreground">待实现</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
+          
           {/* Video Info */}
           <Card className="p-6 glass-effect">
             <h2 className="text-lg font-semibold mb-4">视频信息</h2>

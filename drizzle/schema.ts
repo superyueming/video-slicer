@@ -45,9 +45,14 @@ export const videoJobs = mysqlTable("video_jobs", {
   
   // Processing status
   status: mysqlEnum("status", ["pending", "processing", "completed", "failed"]).default("pending").notNull(),
+  step: mysqlEnum("step", ["uploaded", "audio_extracted", "transcribed", "analyzed", "completed"]).default("uploaded"),
   progress: int("progress").default(0).notNull(), // 0-100
   currentStep: varchar("current_step", { length: 100 }),
   errorMessage: text("error_message"),
+  
+  // Intermediate results
+  audioUrl: text("audio_url"),
+  audioKey: text("audio_key"),
   
   // Results
   transcriptUrl: text("transcript_url"),
