@@ -193,3 +193,18 @@
 - [ ] 优化AI提示词，强调片段长度和数量要求
 - [ ] 测试验证优化效果
 - [ ] 保存checkpoint
+
+## 步骤3未使用步骤2.5结构标注信息
+- [ ] 检查数据库中contentStructure是否正确保存
+- [ ] 检查analyzeContentStep是否正确读取contentStructure
+- [ ] 检查structureInfo是否正确传递给AI
+- [ ] 添加日志输出验证数据流
+- [ ] 测试验证修复
+- [ ] 保存checkpoint
+
+## 步骤3片段选择不遵循脚本中的片段编号
+- [ ] 诊断问题原因（AI在选择片段时没有参考脚本中标注的片段编号）
+- [ ] 优化segmentSelectionRequest提示词，强调使用脚本中标注的片段编号
+- [ ] 或者修改逻辑，直接从脚本中提取片段编号，不再让AI重新选择
+- [ ] 测试验证优化效果
+- [ ] 保存checkpoint

@@ -357,8 +357,10 @@ export async function analyzeContentStep(jobId: number): Promise<void> {
     console.log(`[Analyze] Generating overall script for job ${jobId}`);
     
     // 构建内容结构信息（如果有）
+    console.log(`[Analyze] job.contentStructure:`, JSON.stringify(job.contentStructure));
     let structureInfo = '';
     if (job.contentStructure && Array.isArray(job.contentStructure) && job.contentStructure.length > 0) {
+      console.log(`[Analyze] Found ${job.contentStructure.length} structure segments`);
       structureInfo = `\n\n内容结构标注（AI已识别的视频结构）：\n`;
       job.contentStructure.forEach((seg: any, index: number) => {
         structureInfo += `\n片段${index + 1}:\n`;
@@ -413,14 +415,21 @@ ${overallScript}
 SRT字幕内容：
 ${srtContent}
 
-重要说明：
-- SRT格式中的时间戳格式为 "HH:MM:SS,mmm --> HH:MM:SS,mmm"
-- 你需要根据字幕内容找到精彩片段的开始和结束时间
-- 请使用SRT中实际出现的时间戳，不要编造时间
-- 时间格式必须为 HH:MM:SS（例如：00:05:30　01:23:45）
-- **片段数量和时长必须严格遵循分析提示词中的要求**
+**核心要求**：
+1. **优先使用脚本中标注的片段**：如果总体脚本中明确指出了片段编号（例如“片段14-15”、“片段24-27”），必须优先选择这些片段
+2. **精确定位时间范围**：根据SRT编号找到对应的字幕块，提取实际的开始和结束时间
+3. **遵循数量和时长要求**：严格按照分析提示词中指定的片段数量和时长要求
 
-请严格按照分析提示词中指定的片段数量和时长要求选择片段。
+**技术说明**：
+- SRT格式中的时间戳格式为 "HH:MM:SS,mmm --> HH:MM:SS,mmm"
+- 请使用SRT中实际出现的时间戳，不要编造时间
+- 输出时间格式必须为 HH:MM:SS（例如：00:05:30　01:23:45）
+
+**示例**：
+如果脚本中提到“片段14-15”，则应该：
+1. 在SRT中找到第14和15号字幕块
+2. 提取第14号的开始时间和第15号的结束时间
+3. 将这个时间范围作为一个片段返回
 
 示例输出格式：
 {
@@ -627,8 +636,10 @@ export async function analyzeWithCustomPrompt(
     console.log(`[Analyze] Generating overall script for job ${jobId}`);
     
     // 构建内容结构信息（如果有）
+    console.log(`[Analyze] job.contentStructure:`, JSON.stringify(job.contentStructure));
     let structureInfo = '';
     if (job.contentStructure && Array.isArray(job.contentStructure) && job.contentStructure.length > 0) {
+      console.log(`[Analyze] Found ${job.contentStructure.length} structure segments`);
       structureInfo = `\n\n内容结构标注（AI已识别的视频结构）：\n`;
       job.contentStructure.forEach((seg: any, index: number) => {
         structureInfo += `\n片段${index + 1}:\n`;
@@ -683,14 +694,21 @@ ${overallScript}
 SRT字幕内容：
 ${srtContent}
 
-重要说明：
-- SRT格式中的时间戳格式为 "HH:MM:SS,mmm --> HH:MM:SS,mmm"
-- 你需要根据字幕内容找到精彩片段的开始和结束时间
-- 请使用SRT中实际出现的时间戳，不要编造时间
-- 时间格式必须为 HH:MM:SS（例如：00:05:30　01:23:45）
-- **片段数量和时长必须严格遵循分析提示词中的要求**
+**核心要求**：
+1. **优先使用脚本中标注的片段**：如果总体脚本中明确指出了片段编号（例如“片段14-15”、“片段24-27”），必须优先选择这些片段
+2. **精确定位时间范围**：根据SRT编号找到对应的字幕块，提取实际的开始和结束时间
+3. **遵循数量和时长要求**：严格按照分析提示词中指定的片段数量和时长要求
 
-请严格按照分析提示词中指定的片段数量和时长要求选择片段。
+**技术说明**：
+- SRT格式中的时间戳格式为 "HH:MM:SS,mmm --> HH:MM:SS,mmm"
+- 请使用SRT中实际出现的时间戳，不要编造时间
+- 输出时间格式必须为 HH:MM:SS（例如：00:05:30　01:23:45）
+
+**示例**：
+如果脚本中提到“片段14-15”，则应该：
+1. 在SRT中找到第14和15号字幕块
+2. 提取第14号的开始时间和第15号的结束时间
+3. 将这个时间范围作为一个片段返回
 示例输出格式：
 {
   "segments": [
