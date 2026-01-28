@@ -378,7 +378,7 @@ export default function JobStatus() {
                   {/* 按钮 */}
                   <div className="flex gap-2">
                     {/* 配置分析按钮 */}
-                    {job.transcriptUrl && !job.selectedSegments && (
+                    {job.transcriptUrl && (
                       <Button
                         size="sm"
                         onClick={() => setShowPromptConfigDialog(true)}
