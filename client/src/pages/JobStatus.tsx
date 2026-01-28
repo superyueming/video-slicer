@@ -27,10 +27,14 @@ export default function JobStatus() {
     { 
       enabled: jobId > 0,
       refetchInterval: (query) => {
-        // 如果任务还在处理中，每3秒刷新一次
+        // 如果任务还在处理中，每2秒刷新一次
         const data = query.state.data;
         if (data && (data.status === 'pending' || data.status === 'processing')) {
-          return 3000;
+          return 2000;
+        }
+        // 如果正在执行某个步骤（progress < 100），也要轮询
+        if (data && data.progress > 0 && data.progress < 100) {
+          return 2000;
         }
         return false;
       }
@@ -191,73 +195,94 @@ export default function JobStatus() {
             <Card className="p-6 glass-effect">
               <h2 className="text-lg font-semibold mb-4">分步处理</h2>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-accent/30">
-                  <div>
-                    <p className="font-medium">步骤1: 提取音频</p>
-                    <p className="text-sm text-muted-foreground">
-                      {job.step === 'uploaded' ? '待处理' : '✅ 已完成'}
-                    </p>
+                <div className="space-y-2 p-3 rounded-lg bg-accent/30">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">步骤1: 提取音频</p>
+                      <p className="text-sm text-muted-foreground">
+                        {job.step === 'uploaded' && job.progress === 0 && '待处理'}
+                        {job.step === 'uploaded' && job.progress > 0 && job.progress < 100 && job.currentStep}
+                        {job.step !== 'uploaded' && '✅ 已完成'}
+                      </p>
+                    </div>
+                    {job.step === 'uploaded' && job.progress === 0 && (
+                      <Button
+                        size="sm"
+                        onClick={() => extractAudioMutation.mutate({ jobId })}
+                        disabled={extractAudioMutation.isPending}
+                      >
+                        {extractAudioMutation.isPending ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            处理中...
+                          </>
+                        ) : (
+                          '开始处理'
+                        )}
+                      </Button>
+                    )}
+                    {job.audioUrl && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(job.audioUrl!, '_blank')}
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        下载音频
+                      </Button>
+                    )}
                   </div>
-                  {job.step === 'uploaded' && (
-                    <Button
-                      size="sm"
-                      onClick={() => extractAudioMutation.mutate({ jobId })}
-                      disabled={extractAudioMutation.isPending}
-                    >
-                      {extractAudioMutation.isPending ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          处理中...
-                        </>
-                      ) : (
-                        '开始处理'
-                      )}
-                    </Button>
-                  )}
-                  {job.audioUrl && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => window.open(job.audioUrl!, '_blank')}
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      下载音频
-                    </Button>
+                  {job.step === 'uploaded' && job.progress > 0 && job.progress < 100 && (
+                    <div className="space-y-1">
+                      <Progress value={job.progress} className="h-2" />
+                      <p className="text-xs text-muted-foreground text-right">{job.progress}%</p>
+                    </div>
                   )}
                 </div>
                 
-                <div className="flex items-center justify-between p-3 rounded-lg bg-accent/30">
-                  <div>
-                    <p className="font-medium">步骤2: 转录音频</p>
-                    <p className="text-sm text-muted-foreground">
-                      {job.step === 'uploaded' || job.step === 'audio_extracted' ? '待处理' : '✅ 已完成'}
-                    </p>
+                <div className="space-y-2 p-3 rounded-lg bg-accent/30">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">步骤2: 转录音频</p>
+                      <p className="text-sm text-muted-foreground">
+                        {job.step === 'audio_extracted' && job.progress === 0 && '待处理'}
+                        {job.step === 'audio_extracted' && job.progress > 0 && job.progress < 100 && job.currentStep}
+                        {job.step === 'transcribed' && '✅ 已完成'}
+                        {job.step === 'uploaded' && '待处理'}
+                      </p>
+                    </div>
+                    {job.step === 'audio_extracted' && job.progress === 0 && (
+                      <Button
+                        size="sm"
+                        onClick={() => transcribeAudioMutation.mutate({ jobId })}
+                        disabled={transcribeAudioMutation.isPending}
+                      >
+                        {transcribeAudioMutation.isPending ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            处理中...
+                          </>
+                        ) : (
+                          '开始处理'
+                        )}
+                      </Button>
+                    )}
+                    {job.transcriptUrl && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(job.transcriptUrl!, '_blank')}
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        下载字幕
+                      </Button>
+                    )}
                   </div>
-                  {job.step === 'audio_extracted' && (
-                    <Button
-                      size="sm"
-                      onClick={() => transcribeAudioMutation.mutate({ jobId })}
-                      disabled={transcribeAudioMutation.isPending}
-                    >
-                      {transcribeAudioMutation.isPending ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          处理中...
-                        </>
-                      ) : (
-                        '开始处理'
-                      )}
-                    </Button>
-                  )}
-                  {job.transcriptUrl && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => window.open(job.transcriptUrl!, '_blank')}
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      下载字幕
-                    </Button>
+                  {job.step === 'audio_extracted' && job.progress > 0 && job.progress < 100 && (
+                    <div className="space-y-1">
+                      <Progress value={job.progress} className="h-2" />
+                      <p className="text-xs text-muted-foreground text-right">{job.progress}%</p>
+                    </div>
                   )}
                 </div>
                 
