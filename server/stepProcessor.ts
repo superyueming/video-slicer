@@ -15,9 +15,20 @@ export async function extractAudioStep(jobId: number): Promise<void> {
   const job = await getVideoJob(jobId);
   if (!job) throw new Error('Job not found');
   
-  // 检查当前步骤
+  // 允许重新处理：如果已经完成，先重置状态
   if (job.step !== 'uploaded') {
-    throw new Error(`Invalid step: expected 'uploaded', got '${job.step}'`);
+    console.log(`[ExtractAudio] Re-processing job ${jobId} from step '${job.step}'`);
+    // 重置到uploaded状态
+    const db = await getDb();
+    if (!db) throw new Error('Database not available');
+    await db.update(videoJobs)
+      .set({ 
+        step: 'uploaded',
+        progress: 0,
+        currentStep: '准备重新处理',
+        status: 'pending'
+      })
+      .where(eq(videoJobs.id, jobId));
   }
   
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), `audio-extract-${jobId}-`));
@@ -113,8 +124,24 @@ export async function transcribeAudioStep(jobId: number): Promise<void> {
   const job = await getVideoJob(jobId);
   if (!job) throw new Error('Job not found');
   
+  // 允许重新处理：如果已经完成，先重置状态
   if (job.step !== 'audio_extracted') {
-    throw new Error(`Invalid step: expected 'audio_extracted', got '${job.step}'`);
+    if (job.step === 'transcribed') {
+      console.log(`[Transcribe] Re-processing job ${jobId} from step '${job.step}'`);
+      // 重置到audio_extracted状态
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+      await db.update(videoJobs)
+        .set({ 
+          step: 'audio_extracted',
+          progress: 0,
+          currentStep: '准备重新处理',
+          status: 'pending'
+        })
+        .where(eq(videoJobs.id, jobId));
+    } else {
+      throw new Error(`Invalid step: expected 'audio_extracted', got '${job.step}'`);
+    }
   }
   
   if (!job.audioUrl) {
