@@ -59,21 +59,29 @@ export default function StepCard({
   return (
     <Card className={`border ${status === 'processing' ? 'border-primary' : 'border-border'}`}>
       <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-3 flex-1">
-            <div className="mt-0.5">{getStatusIcon()}</div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-start justify-between gap-4">
+          {/* 左侧：图标 + 标题 */}
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <div className="mt-0.5 flex-shrink-0">{getStatusIcon()}</div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <span className="text-sm font-medium text-muted-foreground">{stepNumber}</span>
                 {getStatusBadge()}
               </div>
               <CardTitle className="text-lg">{title}</CardTitle>
             </div>
           </div>
+          
+          {/* 右侧：按钮组 */}
+          {actions && (
+            <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
+              {actions}
+            </div>
+          )}
         </div>
       </CardHeader>
       
-      {(progress !== undefined || children || actions || errorMessage) && (
+      {(progress !== undefined || children || errorMessage) && (
         <CardContent className="space-y-4">
           {errorMessage && (
             <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
@@ -92,12 +100,6 @@ export default function StepCard({
           )}
           
           {children}
-          
-          {actions && (
-            <div className="flex gap-2">
-              {actions}
-            </div>
-          )}
         </CardContent>
       )}
     </Card>
