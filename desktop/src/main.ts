@@ -5,7 +5,9 @@ import { OnlineVerifier } from './onlineVerifier';
 import { startServer } from './server';
 
 const APP_VERSION = '1.0.0';
-const SERVER_URL = 'https://your-server.com'; // Replace with your actual server URL
+// Production server URL - Update this when deploying
+// Current Manus domain (will change on restart, bind custom domain in Settings → Domains for production)
+const SERVER_URL = 'https://3000-inad6zubup66m81lcklvw-22d12335.sg1.manus.computer';
 
 let mainWindow: BrowserWindow | null = null;
 let updateManager: UpdateManager | null = null;
