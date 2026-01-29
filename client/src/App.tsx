@@ -6,15 +6,16 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import JobStatus from "./pages/JobStatus";
-import JobList from "./pages/JobList";
+import TaskList from "./pages/TaskList";
+import Navbar from "./components/Navbar";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
+      <Route path={"/"} component={TaskList} />
+      <Route path="/upload" component={Home} />
       <Route path="/job/:id" component={JobStatus} />
-      <Route path="/jobs" component={JobList} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
@@ -36,6 +37,7 @@ function App() {
       >
         <TooltipProvider>
           <Toaster />
+          <Navbar />
           <Router />
         </TooltipProvider>
       </ThemeProvider>
