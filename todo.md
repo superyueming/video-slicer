@@ -462,3 +462,13 @@
 - [x] 创建发布流程文档
 - [ ] 测试完整的自动更新流程
 - [ ] 保存checkpoint
+
+
+## GitHub发布配置（v5.1.1）
+- [x] 收集用户GitHub仓库信息
+- [x] 修改desktop/package.json中的GitHub配置
+- [ ] 指导用户生成GitHub Personal Access Token
+- [ ] 指导用户配置GitHub Secrets
+- [ ] 测试GitHub Actions工作流
+- [ ] 验证自动构建结果
+- [ ] 保存checkpoint
