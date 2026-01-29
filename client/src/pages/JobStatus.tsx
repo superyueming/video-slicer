@@ -226,20 +226,20 @@ export default function JobStatus() {
           </div>
 
           {/* 紧凑的状态栏 */}
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-4 rounded-lg border bg-card">
             <div className="flex items-center gap-3">
-              {getStatusIcon()}
-              <div>
-                <h1 className="text-lg font-semibold">{getStatusText()}</h1>
+              <div className="flex-shrink-0">{getStatusIcon()}</div>
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-lg font-semibold">{getStatusText()}</h1>
                 {job.currentStep && (
-                  <p className="text-sm text-muted-foreground">{job.currentStep || ''}</p>
+                  <p className="text-sm text-muted-foreground truncate">{job.currentStep || ''}</p>
                 )}
               </div>
             </div>
             
             {(job.status === 'pending' || job.status === 'processing') && (
-              <div className="flex items-center gap-3 min-w-[200px]">
-                <Progress value={job.progress} className="h-2" />
+              <div className="flex items-center gap-3 w-full sm:w-auto sm:min-w-[200px]">
+                <Progress value={job.progress} className="h-2 flex-1" />
                 <span className="text-sm text-muted-foreground whitespace-nowrap">{job.progress}%</span>
               </div>
             )}
@@ -249,6 +249,7 @@ export default function JobStatus() {
                 onClick={handleRetry} 
                 disabled={retryMutation.isPending}
                 size="sm"
+                className="w-full sm:w-auto"
               >
                 {retryMutation.isPending ? (
                   <>

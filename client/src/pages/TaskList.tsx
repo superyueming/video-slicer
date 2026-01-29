@@ -48,12 +48,12 @@ export default function TaskList() {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-3xl font-bold">视频任务列表</h1>
-          <p className="text-muted-foreground mt-2">管理您的所有视频切片任务</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">视频任务列表</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">管理您的所有视频切片任务</p>
         </div>
-        <Button onClick={() => navigate("/upload")} size="lg" className="gap-2">
+        <Button onClick={() => navigate("/upload")} size="default" className="gap-2 w-full sm:w-auto">
           <Upload className="w-4 h-4" />
           上传新视频
         </Button>
@@ -72,7 +72,7 @@ export default function TaskList() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {jobs.map((job) => (
             <Card
               key={job.id}

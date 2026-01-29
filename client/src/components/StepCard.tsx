@@ -59,7 +59,7 @@ export default function StepCard({
   return (
     <Card className={`border ${status === 'processing' ? 'border-primary' : 'border-border'}`}>
       <CardHeader>
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
           {/* 左侧：图标 + 标题 */}
           <div className="flex items-start gap-3 flex-1 min-w-0">
             <div className="mt-0.5 flex-shrink-0">{getStatusIcon()}</div>
@@ -68,13 +68,13 @@ export default function StepCard({
                 <span className="text-sm font-medium text-muted-foreground">{stepNumber}</span>
                 {getStatusBadge()}
               </div>
-              <CardTitle className="text-lg">{title}</CardTitle>
+              <CardTitle className="text-base sm:text-lg">{title}</CardTitle>
             </div>
           </div>
           
-          {/* 右侧：按钮组 */}
+          {/* 右侧/底部：按钮组 */}
           {actions && (
-            <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
+            <div className="flex gap-2 flex-wrap sm:flex-shrink-0 sm:justify-end">
               {actions}
             </div>
           )}

@@ -196,15 +196,15 @@ export default function Home() {
             <span className="text-sm font-medium text-primary">AI驱动的智能剪辑</span>
           </div>
           
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-purple-400 to-pink-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-primary via-purple-400 to-pink-400 bg-clip-text text-transparent px-4">
             AI视频智能切片
           </h1>
           
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-6 sm:mb-8 px-4">
             自动识别演讲内容，智能选择精彩片段，一键生成带字幕的短视频
           </p>
 
-          <div className="flex flex-wrap gap-8 justify-center text-sm text-muted-foreground">
+          <div className="flex flex-wrap gap-4 sm:gap-6 md:gap-8 justify-center text-xs sm:text-sm text-muted-foreground px-4">
             <div className="flex items-center gap-2">
               <Zap className="w-4 h-4 text-primary" />
               <span>自动语音识别</span>
