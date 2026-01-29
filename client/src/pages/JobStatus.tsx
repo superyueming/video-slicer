@@ -133,7 +133,7 @@ export default function JobStatus() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen gradient-bg flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="p-8 glass-effect">
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
           <p className="mt-4 text-center text-muted-foreground">加载中...</p>
@@ -144,7 +144,7 @@ export default function JobStatus() {
 
   if (!job) {
     return (
-      <div className="min-h-screen gradient-bg flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="p-8 glass-effect text-center">
           <XCircle className="w-12 h-12 mx-auto text-destructive mb-4" />
           <h2 className="text-xl font-semibold mb-2">任务不存在</h2>
@@ -215,7 +215,7 @@ export default function JobStatus() {
   };
 
   return (
-    <div className="min-h-screen gradient-bg">
+    <div className="min-h-screen bg-background">
       <div className="container py-8">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* 面包屑导航 */}
@@ -471,7 +471,7 @@ export default function JobStatus() {
             stepNumber="步骤 4"
             title="生成视频片段"
             status={getStep4Status()}
-            progress={job.step === 'analyzed' && job.progress > 0 ? job.progress : undefined}
+            progress={job.step === 'completed' && job.progress === 100 ? undefined : job.progress}
             actions={
               <>
                 {job.step === 'analyzed' && job.progress === 0 && (
@@ -513,7 +513,24 @@ export default function JobStatus() {
                 )}
               </>
             }
-          />
+          >
+            {job.finalVideoUrl && job.step === 'completed' && (
+              <div className="space-y-4">
+                <div className="rounded-lg overflow-hidden border bg-card">
+                  <video
+                    controls
+                    className="w-full"
+                    src={job.finalVideoUrl}
+                  >
+                    您的浏览器不支持视频播放。
+                  </video>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <p>✅ 视频已生成完成，可以在线预览或下载</p>
+                </div>
+              </div>
+            )}
+          </StepCard>
         </div>
       </div>
 
