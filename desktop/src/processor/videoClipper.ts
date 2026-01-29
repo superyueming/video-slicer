@@ -15,10 +15,13 @@ export interface ClipSegment {
 
 export interface ClipVideoOptions {
   videoPath: string;                             // 输入视频路径
-  segment: ClipSegment;                          // 剪辑片段
+  segment?: ClipSegment;                         // 剪辑片段（与segment或startTime/endTime二选一）
+  startTime?: number;                            // 开始时间（秒）
+  endTime?: number;                              // 结束时间（秒）
   outputPath?: string;                           // 输出路径（可选）
   reEncode?: boolean;                            // 是否重新编码（默认false，使用流复制）
   onProgress?: (progress: FFmpegProgress) => void; // 进度回调
+  onLog?: (message: string) => void;             // 日志回调
 }
 
 /**
@@ -28,10 +31,21 @@ export async function clipVideo(options: ClipVideoOptions): Promise<string> {
   const {
     videoPath,
     segment,
+    startTime,
+    endTime,
     outputPath,
     reEncode = false,
-    onProgress
+    onProgress,
+    onLog
   } = options;
+  
+  // 支持两种方式：直接传入startTime/endTime或传入segment对象
+  const actualStartTime = startTime ?? segment?.startTime;
+  const actualEndTime = endTime ?? segment?.endTime;
+  
+  if (actualStartTime === undefined || actualEndTime === undefined) {
+    throw new Error('必须提供startTime/endTime或segment');
+  }
   
   // 检查输入文件是否存在
   if (!fs.existsSync(videoPath)) {
@@ -41,7 +55,7 @@ export async function clipVideo(options: ClipVideoOptions): Promise<string> {
   // 生成输出路径
   const finalOutputPath = outputPath || path.join(
     path.dirname(videoPath),
-    `${path.basename(videoPath, path.extname(videoPath))}_clip_${segment.startTime}-${segment.endTime}${path.extname(videoPath)}`
+    `${path.basename(videoPath, path.extname(videoPath))}_clip_${actualStartTime}-${actualEndTime}${path.extname(videoPath)}`
   );
   
   // 如果输出文件已存在，先删除
@@ -52,14 +66,14 @@ export async function clipVideo(options: ClipVideoOptions): Promise<string> {
   console.log('[VideoClipper] 开始剪辑视频');
   console.log('[VideoClipper] 输入:', videoPath);
   console.log('[VideoClipper] 输出:', finalOutputPath);
-  console.log('[VideoClipper] 时间范围:', `${segment.startTime}s - ${segment.endTime}s`);
+  console.log('[VideoClipper] 时间范围:', `${actualStartTime}s - ${actualEndTime}s`);
   console.log('[VideoClipper] 重新编码:', reEncode);
   
   // 构建FFmpeg命令
   const args = [
     '-i', videoPath,                        // 输入文件
-    '-ss', segment.startTime.toString(),    // 开始时间
-    '-to', segment.endTime.toString(),      // 结束时间
+    '-ss', actualStartTime.toString(),      // 开始时间
+    '-to', actualEndTime.toString(),        // 结束时间
   ];
   
   if (reEncode) {
@@ -85,11 +99,11 @@ export async function clipVideo(options: ClipVideoOptions): Promise<string> {
   await executeFFmpeg({
     args,
     onProgress,
-    onLog: (message) => {
+    onLog: onLog || ((message) => {
       if (message.includes('error') || message.includes('Error')) {
         console.error('[VideoClipper] FFmpeg错误:', message);
       }
-    }
+    })
   });
   
   // 检查输出文件是否生成

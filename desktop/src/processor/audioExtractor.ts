@@ -13,6 +13,7 @@ export interface ExtractAudioOptions {
   sampleRate?: number;                           // 采样率（默认16000Hz，适合语音识别）
   channels?: number;                             // 声道数（默认1，单声道）
   onProgress?: (progress: FFmpegProgress) => void; // 进度回调
+  onLog?: (message: string) => void;             // 日志回调
 }
 
 /**
@@ -24,7 +25,8 @@ export async function extractAudio(options: ExtractAudioOptions): Promise<string
     outputPath,
     sampleRate = 16000,
     channels = 1,
-    onProgress
+    onProgress,
+    onLog
   } = options;
   
   // 检查输入文件是否存在
