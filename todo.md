@@ -256,3 +256,14 @@
 - [ ] 继续优化：使用StepCard重构步骤1-4（可选）
 - [x] 测试所有页面跳转和交互
 - [x] 保存checkpoint
+
+## 主题切换和样式完全统一
+- [x] 添加ThemeContext和useTheme hook（已存在）
+- [x] 在main.tsx启用ThemeProvider的switchable功能
+- [x] 在Navbar添加主题切换开关（太阳/月亮图标）
+- [x] Tailwind已支持dark mode
+- [x] 移除顶部大卡片，改为紧凑的状态栏
+- [x] 添加面包屑导航
+- [ ] 继续优化：使用StepCard重构步骤1-4（可选，需要更多时间）
+- [x] 测试黑白主题切换
+- [x] 保存checkpoint

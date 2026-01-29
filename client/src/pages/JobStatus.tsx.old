@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useRoute, useLocation, Link } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -185,31 +185,22 @@ export default function JobStatus() {
 
   return (
     <div className="min-h-screen gradient-bg">
-      <div className="container py-8">
-        <div className="max-w-4xl mx-auto space-y-6">
-          {/* 面包屑导航 */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link href="/">任务列表</Link>
-            <span>/</span>
-            <span className="text-foreground">任务 {jobId}</span>
-          </div>
-
-          {/* 紧凑的状态栏 */}
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
-            <div className="flex items-center gap-3">
-              {getStatusIcon()}
-              <div>
-                <h1 className="text-lg font-semibold">{getStatusText()}</h1>
-                {job.currentStep && (
-                  <p className="text-sm text-muted-foreground">{job.currentStep}</p>
-                )}
-              </div>
-            </div>
+      <div className="container py-16">
+        <div className="max-w-3xl mx-auto space-y-6">
+          {/* Status Card */}
+          <Card className="p-8 glass-effect text-center">
+            <div className="mb-6">{getStatusIcon()}</div>
             
-            {(job.status === 'pending' || job.status === 'processing') && (
-              <div className="flex items-center gap-3 min-w-[200px]">
-                <Progress value={job.progress} className="h-2" />
-                <span className="text-sm text-muted-foreground">{job.progress}%</span>
+            <h1 className="text-3xl font-bold mb-2">{getStatusText()}</h1>
+            
+            {job.currentStep && (
+              <p className="text-muted-foreground mb-6">{job.currentStep}</p>
+            )}
+
+            {job.status === 'failed' && job.errorMessage && (
+              <div className="mt-4 p-4 rounded-lg bg-destructive/10 text-destructive text-sm text-left">
+                <p className="font-semibold mb-1">错误信息：</p>
+                <p className="whitespace-pre-wrap">{job.errorMessage}</p>
               </div>
             )}
             
@@ -217,7 +208,7 @@ export default function JobStatus() {
               <Button 
                 onClick={handleRetry} 
                 disabled={retryMutation.isPending}
-                size="sm"
+                className="mt-6"
               >
                 {retryMutation.isPending ? (
                   <>
@@ -232,15 +223,20 @@ export default function JobStatus() {
                 )}
               </Button>
             )}
-          </div>
+            
+            {(job.status === 'pending' || job.status === 'processing') && (
+              <div className="space-y-2">
+                <Progress value={job.progress} className="h-2" />
+                <p className="text-sm text-muted-foreground">{job.progress}%</p>
+              </div>
+            )}
 
-          {/* 错误信息 */}
-          {job.status === 'failed' && job.errorMessage && (
-            <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
-              <p className="font-semibold text-sm text-destructive mb-1">错误信息：</p>
-              <p className="text-sm text-destructive whitespace-pre-wrap">{job.errorMessage}</p>
-            </div>
-          )}
+            {job.status === 'failed' && job.errorMessage && (
+              <div className="mt-4 p-4 rounded-lg bg-destructive/10 border border-destructive/20">
+                <p className="text-sm text-destructive">{job.errorMessage}</p>
+              </div>
+            )}
+          </Card>
 
           {/* Step Actions */}
           {(

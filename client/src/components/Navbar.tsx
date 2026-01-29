@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
-import { Home, Upload, Sparkles } from "lucide-react";
+import { Home, Upload, Sparkles, Moon, Sun } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function Navbar() {
   const [location, setLocation] = useLocation();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -29,6 +31,14 @@ export default function Navbar() {
           >
             <Upload className="w-4 h-4" />
             上传视频
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            title={theme === 'dark' ? '切换到亮色模式' : '切换到暗色模式'}
+          >
+            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </Button>
         </div>
       </div>
