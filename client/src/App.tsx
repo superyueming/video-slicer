@@ -7,6 +7,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import Home from "./pages/Home";
 import JobStatus from "./pages/JobStatus";
 import TaskList from "./pages/TaskList";
+import LocalProcessor from "./pages/LocalProcessor";
 import Navbar from "./components/Navbar";
 
 function Router() {
@@ -15,6 +16,7 @@ function Router() {
     <Switch>
       <Route path={"/"} component={TaskList} />
       <Route path="/upload" component={Home} />
+      <Route path="/local" component={LocalProcessor} />
       <Route path="/job/:id" component={JobStatus} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
-import { Home, Upload, Sparkles, Moon, Sun } from "lucide-react";
+import { Home, Upload, Sparkles, Moon, Sun, Monitor } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 
 export default function Navbar() {
@@ -35,6 +35,16 @@ export default function Navbar() {
           >
             <Upload className="w-4 h-4" />
             <span className="hidden sm:inline">上传视频</span>
+          </Button>
+          <Button
+            variant={location === "/local" ? "default" : "ghost"}
+            onClick={() => setLocation("/local")}
+            className="gap-2"
+            size="sm"
+            title="本地处理"
+          >
+            <Monitor className="w-4 h-4" />
+            <span className="hidden sm:inline">本地处理</span>
           </Button>
           <Button
             variant="ghost"

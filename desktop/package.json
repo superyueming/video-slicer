@@ -12,11 +12,13 @@
     "build": "npm run build:main && npm run build:renderer",
     "build:main": "tsc -p tsconfig.main.json",
     "build:renderer": "cd .. && npm run build",
+    "build:prod": "npm run build:main && electron-builder",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:win": "electron-builder --win",
     "dist:mac": "electron-builder --mac",
-    "dist:linux": "electron-builder --linux"
+    "dist:linux": "electron-builder --linux",
+    "publish": "electron-builder --publish always"
   },
   "dependencies": {
     "@types/uuid": "^10.0.0",
@@ -96,9 +98,12 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
     },
-    "publish": {
-      "provider": "generic",
-      "url": "https://your-server.com/updates"
-    }
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "YOUR_GITHUB_USERNAME",
+        "repo": "YOUR_REPO_NAME"
+      }
+    ]
   }
 }

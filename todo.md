@@ -420,3 +420,45 @@
 - [ ] 更新桌面应用文档
 - [ ] 创建本地处理使用指南
 - [ ] 保存checkpoint
+
+## 桌面应用本地处理功能补充
+- [ ] 实现IPC通信接口（主进程 ↔ 渲染进程）
+- [ ] 在preload.ts中暴露processor API
+- [ ] 在main.ts中注册IPC handlers
+- [ ] 集成processor模块到主进程
+- [ ] 创建本地处理UI页面
+- [ ] 实现视频选择和信息显示
+- [ ] 实现处理进度显示
+- [ ] 实现完整的本地处理工作流
+- [ ] 测试本地音频提取
+- [ ] 测试本地视频剪辑和拼接
+- [ ] 保存checkpoint
+
+
+## 桌面应用本地处理功能完成（v5.0.0）
+- [x] 实现IPC通信接口（主进程 ↔ 渲染进程）
+- [x] 在preload.ts中暴露processor API
+- [x] 在main.ts中注册IPC handlers
+- [x] 集成processor模块到主进程
+- [x] 创建本地处理UI页面（LocalProcessor.tsx）
+- [x] 实现视频选择和信息显示
+- [x] 实现处理进度显示
+- [x] 创建本地处理API路由（localProcessorRouter.ts）
+- [x] 实现音频上传功能
+- [x] 实现AI分析功能（转录+内容分析）
+- [x] 实现完整的本地处理工作流
+- [ ] 测试本地音频提取
+- [ ] 测试本地视频剪辑和拼接
+- [ ] 测试完整工作流
+- [ ] 保存checkpoint
+
+
+## GitHub自动更新方案配置（v5.1.0）
+- [x] 配置GitHub Actions自动打包工作流
+- [x] 配置多平台打包（Windows/Mac/Linux）
+- [x] 集成electron-updater自动更新
+- [x] 修改版本检查逻辑，从GitHub Releases获取
+- [x] 优化更新下载和安装流程
+- [x] 创建发布流程文档
+- [ ] 测试完整的自动更新流程
+- [ ] 保存checkpoint

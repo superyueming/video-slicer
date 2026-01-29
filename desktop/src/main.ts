@@ -1,8 +1,10 @@
-import { app, BrowserWindow, dialog } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog } from 'electron';ectron';
 import * as path from 'path';
 import { UpdateManager } from './updater';
 import { OnlineVerifier } from './onlineVerifier';
 import { startServer } from './server';
+import * as processor from './processor';
+import * as fs from 'fs';
 
 const APP_VERSION = '1.0.0';
 // Production server URL - Update this when deploying
@@ -72,8 +74,15 @@ async function checkUpdateAndVerify(): Promise<boolean> {
       });
       
       if (userChoice.response === 1) {
-        // User chose to update
-        await updateManager.downloadAndInstall();
+        // User chose to update - use electron-updater
+        try {
+          await updateManager.checkAndDownload();
+          // 更新下载完成后会自动安装并重启
+        } catch (error) {
+          console.error('[Startup] Update failed, fallback to manual download:', error);
+          // 如果electron-updater失败，回退到手动下载
+          await updateManager.downloadAndInstallManually(updateInfo.downloadUrl);
+        }
         return false;
       }
     }
@@ -236,9 +245,21 @@ async function showForceUpdateDialog(updateInfo: any) {
   // Handle update start
   updateWindow.webContents.on('ipc-message', async (event, channel) => {
     if (channel === 'start-update' && updateManager) {
-      await updateManager.downloadAndInstall((progress) => {
-        updateWindow.webContents.send('update-progress', progress);
-      });
+      try {
+        // 设置主窗口引用，用于发送进度事件
+        updateManager.setMainWindow(updateWindow);
+        
+        // 使用electron-updater下载更新
+        await updateManager.checkAndDownload();
+        
+        // 下载完成后自动安装并重启
+      } catch (error) {
+        console.error('[ForceUpdate] Update failed, fallback to manual download:', error);
+        // 如果electron-updater失败，回退到手动下载
+        await updateManager.downloadAndInstallManually(updateInfo.downloadUrl, (progress) => {
+          updateWindow.webContents.send('update-progress', progress);
+        });
+      }
       updateWindow.webContents.send('update-downloaded');
     }
   });
@@ -288,4 +309,156 @@ app.on('will-quit', () => {
   if (onlineVerifier) {
     onlineVerifier.stop();
   }
+});
+
+// ============================================
+// Processor IPC Handlers
+// ============================================
+
+// Check FFmpeg availability
+ipcMain.handle('processor:checkFFmpeg', async () => {
+  try {
+    const ffmpegPath = processor.getFFmpegPath();
+    return fs.existsSync(ffmpegPath);
+  } catch (error) {
+    console.error('[Processor] FFmpeg check failed:', error);
+    return false;
+  }
+});
+
+// Get video info
+ipcMain.handle('processor:getVideoInfo', async (_event, videoPath: string) => {
+  try {
+    return await processor.getVideoInfo(videoPath);
+  } catch (error: any) {
+    console.error('[Processor] Get video info failed:', error);
+    throw new Error(`获取视频信息失败: ${error.message}`);
+  }
+});
+
+// Extract audio
+ipcMain.handle('processor:extractAudio', async (_event, videoPath: string, outputPath?: string) => {
+  try {
+    return await processor.extractAudio({
+      videoPath,
+      outputPath,
+      onProgress: (progress) => {
+        mainWindow?.webContents.send('processor:progress', progress);
+      },
+      onLog: (message) => {
+        mainWindow?.webContents.send('processor:log', message);
+      }
+    });
+  } catch (error: any) {
+    console.error('[Processor] Extract audio failed:', error);
+    throw new Error(`提取音频失败: ${error.message}`);
+  }
+});
+
+// Clip video
+ipcMain.handle('processor:clipVideo', async (_event, videoPath: string, segment: any, outputPath?: string, reEncode?: boolean) => {
+  try {
+    return await processor.clipVideo({
+      videoPath,
+      startTime: segment.startTime,
+      endTime: segment.endTime,
+      outputPath,
+      reEncode,
+      onProgress: (progress) => {
+        mainWindow?.webContents.send('processor:progress', progress);
+      },
+      onLog: (message) => {
+        mainWindow?.webContents.send('processor:log', message);
+      }
+    });
+  } catch (error: any) {
+    console.error('[Processor] Clip video failed:', error);
+    throw new Error(`剪辑视频失败: ${error.message}`);
+  }
+});
+
+// Clip video batch
+ipcMain.handle('processor:clipVideoBatch', async (_event, videoPath: string, segments: any[], outputDir?: string, reEncode?: boolean) => {
+  try {
+    const results: string[] = [];
+    for (let i = 0; i < segments.length; i++) {
+      const segment = segments[i];
+      const outputPath = outputDir 
+        ? path.join(outputDir, `clip_${i + 1}_${segment.title || ''}.mp4`)
+        : undefined;
+      
+      const result = await processor.clipVideo({
+        videoPath,
+        startTime: segment.startTime,
+        endTime: segment.endTime,
+        outputPath,
+        reEncode,
+        onProgress: (progress) => {
+          mainWindow?.webContents.send('processor:progress', {
+            ...progress,
+            currentClip: i + 1,
+            totalClips: segments.length
+          });
+        },
+        onLog: (message) => {
+          mainWindow?.webContents.send('processor:log', message);
+        }
+      });
+      results.push(result);
+    }
+    return results;
+  } catch (error: any) {
+    console.error('[Processor] Clip video batch failed:', error);
+    throw new Error(`批量剪辑视频失败: ${error.message}`);
+  }
+});
+
+// Concatenate videos
+ipcMain.handle('processor:concatenateVideos', async (_event, videoPaths: string[], outputPath?: string, reEncode?: boolean) => {
+  try {
+    return await processor.concatenateVideos({
+      videoPaths,
+      outputPath,
+      reEncode,
+      onProgress: (progress) => {
+        mainWindow?.webContents.send('processor:progress', progress);
+      }
+    });
+  } catch (error: any) {
+    console.error('[Processor] Concatenate videos failed:', error);
+    throw new Error(`拼接视频失败: ${error.message}`);
+  }
+});
+
+// ============================================
+// File Dialog IPC Handlers
+// ============================================
+
+// Select video file
+ipcMain.handle('file:selectVideo', async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openFile'],
+    filters: [
+      { name: 'Videos', extensions: ['mp4', 'mov', 'avi', 'mkv', 'flv', 'wmv', 'webm'] }
+    ]
+  });
+  return result.canceled ? null : result.filePaths[0];
+});
+
+// Select save path
+ipcMain.handle('file:selectSavePath', async (_event, defaultName: string) => {
+  const result = await dialog.showSaveDialog({
+    defaultPath: defaultName,
+    filters: [
+      { name: 'Videos', extensions: ['mp4'] },
+      { name: 'Audio', extensions: ['mp3', 'wav'] }
+    ]
+  });
+  return result.canceled ? null : result.filePath;
+});
+
+// Show item in folder
+ipcMain.handle('file:showInFolder', async (_event, filePath: string) => {
+  const { shell } = require('electron');
+  shell.showItemInFolder(filePath);
 });
