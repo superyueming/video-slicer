@@ -51,6 +51,24 @@
       {
         "from": "../dist",
         "to": "app/dist"
+      },
+      {
+        "from": "resources/ffmpeg/win",
+        "to": "ffmpeg",
+        "filter": ["**/*"],
+        "platform": ["win32"]
+      },
+      {
+        "from": "resources/ffmpeg/mac",
+        "to": "ffmpeg",
+        "filter": ["**/*"],
+        "platform": ["darwin"]
+      },
+      {
+        "from": "resources/ffmpeg/linux",
+        "to": "ffmpeg",
+        "filter": ["**/*"],
+        "platform": ["linux"]
       }
     ],
     "win": {
