@@ -90,3 +90,34 @@ export const videoJobs = mysqlTable("video_jobs", {
 
 export type VideoJob = typeof videoJobs.$inferSelect;
 export type InsertVideoJob = typeof videoJobs.$inferInsert;
+
+/**
+ * Desktop app version management table
+ */
+export const appVersions = mysqlTable("app_versions", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Version info
+  version: varchar("version", { length: 20 }).notNull().unique(), // e.g., "1.2.0"
+  minRequiredVersion: varchar("min_required_version", { length: 20 }).notNull(), // Minimum version required to use
+  
+  // Update control
+  forceUpdate: int("force_update").default(0).notNull(), // 1 = force update, 0 = optional
+  enabled: int("enabled").default(1).notNull(), // 1 = enabled, 0 = disabled
+  
+  // Download info
+  downloadUrlWindows: text("download_url_windows"),
+  downloadUrlMac: text("download_url_mac"),
+  downloadUrlLinux: text("download_url_linux"),
+  
+  // Release notes
+  releaseNotes: text("release_notes"),
+  releaseDate: timestamp("release_date").notNull(),
+  
+  // Metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AppVersion = typeof appVersions.$inferSelect;
+export type InsertAppVersion = typeof appVersions.$inferInsert;

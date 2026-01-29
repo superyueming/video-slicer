@@ -1,0 +1,9 @@
+{
+  "query": "DELETE FROM app_versions;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 28B4hwZEfm8VzTA.118e2f71f6aa --database YzKxrb3WDhX8V8hPEaRuDD --execute DELETE FROM app_versions;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1621
+}
