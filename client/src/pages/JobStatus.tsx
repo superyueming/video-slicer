@@ -3,7 +3,6 @@ import { useRoute, useLocation, Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 import { 
   CheckCircle2, 
   XCircle, 
@@ -12,14 +11,15 @@ import {
   FileText, 
   Video,
   Home,
-  FileVideo
+  FileVideo,
+  RefreshCw
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { RefreshCw } from "lucide-react";
 import { AnalysisResultDialog } from '@/components/AnalysisResultDialog';
 import { PromptConfigDialog } from '@/components/PromptConfigDialog';
 import { StructureAnnotationDialog } from '@/components/StructureAnnotationDialog';
+import StepCard, { StepStatus } from '@/components/StepCard';
 import { useState } from "react";
 
 export default function JobStatus() {
@@ -35,12 +35,10 @@ export default function JobStatus() {
     { 
       enabled: jobId > 0,
       refetchInterval: (query) => {
-        // 如果任务还在处理中，每2秒刷新一次
         const data = query.state.data;
         if (data && (data.status === 'pending' || data.status === 'processing')) {
           return 2000;
         }
-        // 如果正在执行某个步骤（progress < 100），也要轮询
         if (data && data.progress > 0 && data.progress < 100) {
           return 2000;
         }
@@ -162,11 +160,11 @@ export default function JobStatus() {
   const getStatusIcon = () => {
     switch (job.status) {
       case 'completed':
-        return <CheckCircle2 className="w-16 h-16 text-green-500" />;
+        return <CheckCircle2 className="w-12 h-12 text-green-500 dark:text-green-400" />;
       case 'failed':
-        return <XCircle className="w-16 h-16 text-destructive" />;
+        return <XCircle className="w-12 h-12 text-destructive" />;
       default:
-        return <Loader2 className="w-16 h-16 animate-spin text-primary" />;
+        return <Loader2 className="w-12 h-12 animate-spin text-primary" />;
     }
   };
 
@@ -183,13 +181,46 @@ export default function JobStatus() {
     }
   };
 
+  // 计算各步骤状态
+  const getStep1Status = (): StepStatus => {
+    if (job.step === 'uploaded' && job.progress > 0 && job.progress < 100) return 'processing';
+    if (job.step === 'uploaded' && job.progress === 0) return 'pending';
+    return 'completed';
+  };
+
+  const getStep2Status = (): StepStatus => {
+    if (job.step === 'audio_extracted' && job.progress > 0 && job.progress < 100) return 'processing';
+    if (job.step === 'audio_extracted' && job.progress === 0) return 'pending';
+    if (job.step && ['transcribed', 'analyzed', 'completed'].includes(job.step)) return 'completed';
+    return 'pending';
+  };
+
+  const getStep25Status = (): StepStatus => {
+    if (job.contentStructure) return 'completed';
+    return 'pending';
+  };
+
+  const getStep3Status = (): StepStatus => {
+    if (job.step === 'transcribed' && job.progress > 0 && job.progress < 100) return 'processing';
+    if (job.step === 'transcribed' && job.progress === 0) return 'pending';
+    if (job.step && ['analyzed', 'completed'].includes(job.step)) return 'completed';
+    return 'pending';
+  };
+
+  const getStep4Status = (): StepStatus => {
+    if (job.step === 'analyzed' && job.progress > 0 && job.progress < 100) return 'processing';
+    if (job.step === 'analyzed' && job.progress === 0) return 'pending';
+    if (job.step === 'completed') return 'completed';
+    return 'pending';
+  };
+
   return (
     <div className="min-h-screen gradient-bg">
       <div className="container py-8">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* 面包屑导航 */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link href="/">任务列表</Link>
+            <Link href="/" className="hover:text-foreground transition-colors">任务列表</Link>
             <span>/</span>
             <span className="text-foreground">任务 {jobId}</span>
           </div>
@@ -201,7 +232,7 @@ export default function JobStatus() {
               <div>
                 <h1 className="text-lg font-semibold">{getStatusText()}</h1>
                 {job.currentStep && (
-                  <p className="text-sm text-muted-foreground">{job.currentStep}</p>
+                  <p className="text-sm text-muted-foreground">{job.currentStep || ''}</p>
                 )}
               </div>
             </div>
@@ -209,7 +240,7 @@ export default function JobStatus() {
             {(job.status === 'pending' || job.status === 'processing') && (
               <div className="flex items-center gap-3 min-w-[200px]">
                 <Progress value={job.progress} className="h-2" />
-                <span className="text-sm text-muted-foreground">{job.progress}%</span>
+                <span className="text-sm text-muted-foreground whitespace-nowrap">{job.progress}%</span>
               </div>
             )}
             
@@ -242,462 +273,287 @@ export default function JobStatus() {
             </div>
           )}
 
-          {/* Step Actions */}
-          {(
-            <Card className="p-6 glass-effect">
-              <h2 className="text-lg font-semibold mb-4">分步处理</h2>
-              <div className="space-y-3">
-                <div className="space-y-2 p-3 rounded-lg bg-accent/30">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">步骤1: 提取音频</p>
-                      <p className="text-sm text-muted-foreground">
-                        {job.step === 'uploaded' && job.progress === 0 && '待处理'}
-                        {job.step === 'uploaded' && job.progress > 0 && job.progress < 100 && job.currentStep}
-                        {job.step !== 'uploaded' && '✅ 已完成'}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      {job.step === 'uploaded' && job.progress === 0 && (
-                        <Button
-                          size="sm"
-                          onClick={() => extractAudioMutation.mutate({ jobId })}
-                          disabled={extractAudioMutation.isPending}
-                        >
-                          {extractAudioMutation.isPending ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              处理中...
-                            </>
-                          ) : (
-                            '开始处理'
-                          )}
-                        </Button>
-                      )}
-                      {(job.step !== 'uploaded' || (job.step === 'uploaded' && job.progress > 0)) && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => extractAudioMutation.mutate({ jobId })}
-                          disabled={extractAudioMutation.isPending}
-                        >
-                          <RefreshCw className="w-4 h-4 mr-2" />
-                          重新处理
-                        </Button>
-                      )}
-                      {job.audioUrl && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => window.open(job.audioUrl!, '_blank')}
-                        >
-                          <Download className="w-4 h-4 mr-2" />
-                          下载音频
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                  {job.step === 'uploaded' && job.progress > 0 && job.progress < 100 && (
-                    <div className="space-y-1">
-                      <Progress value={job.progress} className="h-2" />
-                      <p className="text-xs text-muted-foreground text-right">{job.progress}%</p>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="space-y-2 p-3 rounded-lg bg-accent/30">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">步骤2: 转录音频</p>
-                      <p className="text-sm text-muted-foreground">
-                        {job.step === 'audio_extracted' && job.progress === 0 && '待处理'}
-                        {job.step === 'audio_extracted' && job.progress > 0 && job.progress < 100 && job.currentStep}
-                        {job.step === 'transcribed' && '✅ 已完成'}
-                        {job.step === 'uploaded' && '待处理'}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      {job.step === 'audio_extracted' && job.progress === 0 && (
-                        <Button
-                          size="sm"
-                          onClick={() => transcribeAudioMutation.mutate({ jobId })}
-                          disabled={transcribeAudioMutation.isPending}
-                        >
-                          {transcribeAudioMutation.isPending ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              处理中...
-                            </>
-                          ) : (
-                            '开始处理'
-                          )}
-                        </Button>
-                      )}
-                      {job.transcriptUrl && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => transcribeAudioMutation.mutate({ jobId })}
-                          disabled={transcribeAudioMutation.isPending}
-                        >
-                          <RefreshCw className="w-4 h-4 mr-2" />
-                          重新处理
-                        </Button>
-                      )}
-                      {job.transcriptUrl && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => window.open(job.transcriptUrl!, '_blank')}
-                        >
-                          <Download className="w-4 h-4 mr-2" />
-                          下载字幕
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                  {job.step === 'audio_extracted' && job.progress > 0 && job.progress < 100 && (
-                    <div className="space-y-1">
-                      <Progress value={job.progress} className="h-2" />
-                      <p className="text-xs text-muted-foreground text-right">{job.progress}%</p>
-                    </div>
-                  )}
-                </div>
-                
-                {/* 步骤2.5: 内容结构标注 */}
-                <div className="space-y-2 p-3 rounded-lg bg-accent/30">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">步骤2.5: 内容结构标注</p>
-                      <p className="text-sm text-muted-foreground">
-                        {job.contentStructure ? '已完成' : '待处理'}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      {job.transcriptUrl && (
-                        <Button
-                          size="sm"
-                          onClick={() => annotateStructureMutation.mutate({ jobId })}
-                          disabled={annotateStructureMutation.isPending}
-                        >
-                          {annotateStructureMutation.isPending ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              标注中...
-                            </>
-                          ) : (
-                            job.contentStructure ? '重新标注' : '开始标注'
-                          )}
-                        </Button>
-                      )}
-                      {job.contentStructure && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setShowStructureDialog(true)}
-                        >
-                          <FileText className="w-4 h-4 mr-2" />
-                          查看结构
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                {/* 步骤3: AI内容分析 */}
-                <div className="p-4 rounded-lg border bg-card">
-
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium">步骤3: AI内容分析</h3>
-                    {job.step === 'analyzed' && (
-                      <Badge variant="default">已完成</Badge>
-                    )}
-                    {job.step === 'transcribed' && job.progress === 0 && (
-                      <Badge variant="secondary">待处理</Badge>
-                    )}
-                    {job.step === 'transcribed' && job.progress > 0 && job.progress < 100 && (
-                      <Badge variant="default">处理中</Badge>
-                    )}
-                  </div>
-                  
-                  {/* 进度条 */}
-                  {job.step === 'transcribed' && job.progress > 0 && job.progress < 100 && (
-                    <div className="mb-3">
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-muted-foreground">{job.currentStep}</span>
-                        <span className="font-medium">{job.progress}%</span>
-                      </div>
-                      <Progress value={job.progress} className="h-2" />
-                    </div>
-                  )}
-                  
-                  {/* 按钮 */}
-                  <div className="flex gap-2">
-                    {/* 配置分析按钮 */}
-                    {job.transcriptUrl && (
-                      <Button
-                        size="sm"
-                        onClick={() => setShowPromptConfigDialog(true)}
-                      >
-                        配置分析
-                      </Button>
-                    )}
-                    
-                    {/* 重新处理按钮 */}
-                    {job.selectedSegments && job.selectedSegments.length > 0 && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          analyzeContentMutation.mutate({ jobId: job.id });
-                        }}
-                        disabled={analyzeContentMutation.isPending}
-                      >
-                        {analyzeContentMutation.isPending ? '处理中...' : '重新处理'}
-                      </Button>
-                    )}
-                    
-                    {/* 查看结果按钮 */}
-                    {job.selectedSegments && job.selectedSegments.length > 0 && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setShowAnalysisDialog(true)}
-                      >
-                        查看结果 ({job.selectedSegments.length}个片段)
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                
-                {/* 步骤4: 生成视频片段 */}
-                <div className="p-4 rounded-lg bg-accent/30">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <p className="font-medium">步骤4: 生成视频片段</p>
-                      <p className="text-sm text-muted-foreground">
-                        {job.step === 'completed' ? '已完成' : '未开始'}
-                      </p>
-                    </div>
-                    <Badge variant={job.step === 'completed' ? 'default' : 'secondary'}>
-                      {job.step === 'completed' ? '完成' : '等待中'}
-                    </Badge>
-                  </div>
-                  
-                  {job.step === 'analyzed' && job.status === 'processing' && (
-                    <div className="space-y-2 mb-3">
-                      <Progress value={job.progress || 0} className="h-2" />
-                      <p className="text-xs text-muted-foreground">
-                        {job.currentStep || '正在处理...'}
-                      </p>
-                    </div>
-                  )}
-                  
-                  <div className="flex gap-2">
-                    {job.step === 'analyzed' && job.progress === 0 && (
-                      <Button
-                        size="sm"
-                        onClick={() => generateClipsMutation.mutate({ jobId: job.id })}
-                        disabled={generateClipsMutation.isPending}
-                      >
-                        {generateClipsMutation.isPending ? '处理中...' : '开始处理'}
-                      </Button>
-                    )}
-                    
-                    {(job.step === 'analyzed' && job.progress > 0 && job.progress < 100) || job.step === 'completed' ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => generateClipsMutation.mutate({ jobId: job.id })}
-                        disabled={generateClipsMutation.isPending}
-                      >
-                        {generateClipsMutation.isPending ? '处理中...' : '重新处理'}
-                      </Button>
-                    ) : null}
-                    
-                    {job.finalVideoUrl && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => window.open(job.finalVideoUrl!, '_blank')}
-                      >
-                        下载视频
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          )}
-          
-          {/* Video Info */}
-          <Card className="p-6 glass-effect">
-            <h2 className="text-lg font-semibold mb-4">视频信息</h2>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">文件名：</span>
-                <span className="font-medium">{job.originalFilename}</span>
-              </div>
-              <div className="flex justify-between">
+          {/* 步骤0: 上传信息 */}
+          <StepCard
+            stepNumber="步骤 0"
+            title="视频信息"
+            status="completed"
+          >
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
                 <span className="text-muted-foreground">文件大小：</span>
-                <span className="font-medium">
-                  {job.fileSize ? (job.fileSize / 1024 / 1024).toFixed(2) : '0'} MB
-                </span>
+                <span className="font-medium">{(job.fileSize / 1024 / 1024).toFixed(2)} MB</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">识别方式：</span>
-                <span className="font-medium">
-                  {job.asrMethod === 'whisper' ? 'Whisper' : '阿里云ASR'}
-                </span>
+              <div>
+                <span className="text-muted-foreground">视频时长：</span>
+                <span className="font-medium">{job.duration ? `${Math.floor(job.duration / 60)}分${Math.floor(job.duration % 60)}秒` : '未知'}</span>
               </div>
-              <div className="flex justify-between">
+              <div>
                 <span className="text-muted-foreground">创建时间：</span>
-                <span className="font-medium">
-                  {new Date(job.createdAt).toLocaleString('zh-CN')}
-                </span>
+                <span className="font-medium">{new Date(job.createdAt).toLocaleString('zh-CN')}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">视频文件：</span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => window.open(job.originalVideoUrl, '_blank')}
+                  className="h-7 text-xs"
+                >
+                  <Download className="w-3 h-3 mr-1" />
+                  下载
+                </Button>
               </div>
             </div>
-          </Card>
+          </StepCard>
 
-          {/* User Requirement */}
-          <Card className="p-6 glass-effect">
-            <h2 className="text-lg font-semibold mb-4">处理需求</h2>
-            <p className="text-sm text-muted-foreground">{job.userRequirement}</p>
-          </Card>
-
-          {/* Results */}
-          {job.status === 'completed' && (
-            <Card className="p-6 glass-effect">
-              <h2 className="text-lg font-semibold mb-4">处理结果</h2>
-              
-              {/* Video Player */}
-              {job.finalVideoUrl && (
-                <div className="mb-6">
-                  <video
-                    src={job.finalVideoUrl}
-                    controls
-                    className="w-full rounded-lg"
-                  />
-                </div>
-              )}
-
-              {/* Selected Segments */}
-              {job.selectedSegments && job.selectedSegments.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-sm font-semibold mb-3">AI选择的片段</h3>
-                  <div className="space-y-2">
-                    {job.selectedSegments.map((seg, idx) => (
-                      <div key={idx} className="p-3 rounded-lg bg-accent/30 text-sm">
-                        <div className="flex justify-between mb-1">
-                          <span className="font-medium">片段 {idx + 1}</span>
-                          <span className="text-muted-foreground">
-                            {seg.start?.toFixed(1) || '0'}s - {seg.end?.toFixed(1) || '0'}s
-                          </span>
-                        </div>
-                        <p className="text-muted-foreground">{seg.reason}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Download Buttons */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {job.finalVideoUrl && (
+          {/* 步骤1: 提取音频 */}
+          <StepCard
+            stepNumber="步骤 1"
+            title="提取音频"
+            status={getStep1Status()}
+            progress={job.step === 'uploaded' && job.progress > 0 ? job.progress : undefined}
+            actions={
+              <>
+                {job.step === 'uploaded' && job.progress === 0 && (
                   <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => job.finalVideoUrl && window.open(job.finalVideoUrl, '_blank')}
+                    size="sm"
+                    onClick={() => extractAudioMutation.mutate({ jobId })}
+                    disabled={extractAudioMutation.isPending}
                   >
-                    <Video className="w-4 h-4 mr-2" />
-                    下载视频
+                    {extractAudioMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        处理中...
+                      </>
+                    ) : (
+                      '开始处理'
+                    )}
                   </Button>
                 )}
-                
-                {job.subtitleUrl && (
+                {(job.step !== 'uploaded' || (job.step === 'uploaded' && job.progress > 0)) && (
                   <Button
+                    size="sm"
                     variant="outline"
-                    className="w-full"
-                    onClick={() => job.subtitleUrl && window.open(job.subtitleUrl, '_blank')}
+                    onClick={() => extractAudioMutation.mutate({ jobId })}
+                    disabled={extractAudioMutation.isPending}
                   >
-                    <FileText className="w-4 h-4 mr-2" />
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    重新处理
+                  </Button>
+                )}
+                {job.audioUrl && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => window.open(job.audioUrl!, '_blank')}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    下载音频
+                  </Button>
+                )}
+              </>
+            }
+          />
+
+          {/* 步骤2: 转录音频 */}
+          <StepCard
+            stepNumber="步骤 2"
+            title="转录音频"
+            status={getStep2Status()}
+            progress={job.step === 'audio_extracted' && job.progress > 0 ? job.progress : undefined}
+            actions={
+              <>
+                {job.transcriptUrl && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => transcribeAudioMutation.mutate({ jobId })}
+                    disabled={transcribeAudioMutation.isPending}
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    重新处理
+                  </Button>
+                )}
+                {job.transcriptUrl && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => window.open(job.transcriptUrl!, '_blank')}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
                     下载字幕
                   </Button>
                 )}
-                
+              </>
+            }
+          />
+
+          {/* 步骤2.5: 内容结构标注 */}
+          <StepCard
+            stepNumber="步骤 2.5"
+            title="内容结构标注"
+            status={getStep25Status()}
+            actions={
+              <>
                 {job.transcriptUrl && (
                   <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => job.transcriptUrl && window.open(job.transcriptUrl, '_blank')}
+                    size="sm"
+                    onClick={() => annotateStructureMutation.mutate({ jobId })}
+                    disabled={annotateStructureMutation.isPending}
                   >
-                    <FileText className="w-4 h-4 mr-2" />
-                    下载文本
+                    {annotateStructureMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        标注中...
+                      </>
+                    ) : (
+                      job.contentStructure ? '重新标注' : '开始标注'
+                    )}
                   </Button>
                 )}
-              </div>
-            </Card>
-          )}
+                {job.contentStructure && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowStructureDialog(true)}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    查看结构
+                  </Button>
+                )}
+              </>
+            }
+          />
 
-          {/* Actions */}
-          <div className="flex gap-3 justify-center">
-            <Button
-              variant="outline"
-              onClick={() => setLocation("/")}
-            >
-              <Home className="w-4 h-4 mr-2" />
-              返回首页
-            </Button>
-            
-            <Button
-              variant="outline"
-              onClick={() => setLocation("/jobs")}
-            >
-              <FileVideo className="w-4 h-4 mr-2" />
-              我的任务
-            </Button>
-          </div>
+          {/* 步骤3: AI内容分析 */}
+          <StepCard
+            stepNumber="步骤 3"
+            title="AI内容分析"
+            status={getStep3Status()}
+            progress={job.step === 'transcribed' && job.progress > 0 ? job.progress : undefined}
+            actions={
+              <>
+                {job.transcriptUrl && (
+                  <Button
+                    size="sm"
+                    onClick={() => setShowPromptConfigDialog(true)}
+                  >
+                    配置分析
+                  </Button>
+                )}
+                {job.selectedSegments && job.selectedSegments.length > 0 && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowPromptConfigDialog(true)}
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      重新处理
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowAnalysisDialog(true)}
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      查看结果 ({job.selectedSegments.length}个片段)
+                    </Button>
+                  </>
+                )}
+              </>
+            }
+          />
+
+          {/* 步骤4: 生成视频片段 */}
+          <StepCard
+            stepNumber="步骤 4"
+            title="生成视频片段"
+            status={getStep4Status()}
+            progress={job.step === 'analyzed' && job.progress > 0 ? job.progress : undefined}
+            actions={
+              <>
+                {job.step === 'analyzed' && job.progress === 0 && (
+                  <Button
+                    size="sm"
+                    onClick={() => generateClipsMutation.mutate({ jobId })}
+                    disabled={generateClipsMutation.isPending}
+                  >
+                    {generateClipsMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        处理中...
+                      </>
+                    ) : (
+                      '开始处理'
+                    )}
+                  </Button>
+                )}
+                {(job.step === 'completed' || (job.step === 'analyzed' && job.progress > 0)) && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => generateClipsMutation.mutate({ jobId })}
+                    disabled={generateClipsMutation.isPending}
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    重新处理
+                  </Button>
+                )}
+                {job.finalVideoUrl && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => window.open(job.finalVideoUrl!, '_blank')}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    下载视频
+                  </Button>
+                )}
+              </>
+            }
+          />
         </div>
       </div>
-      
-      {/* 分析结果弹窗 */}
-      {job && showAnalysisDialog && (
+
+      {/* 对话框 */}
+      {showAnalysisDialog && job.selectedSegments && (
         <AnalysisResultDialog
           open={showAnalysisDialog}
           onOpenChange={setShowAnalysisDialog}
-          userRequirement={job.userRequirement}
-          scriptPrompt={job.scriptPrompt}
-          overallScript={job.overallScript}
-          segments={job.selectedSegments || []}
+          userRequirement={job.userRequirement || ''}
+          segments={job.selectedSegments}
+          overallScript={job.overallScript || ''}
           onSave={async (segments) => {
-            await updateSegmentsMutation.mutateAsync({
-              jobId: job.id,
-              segments,
-            });
+            updateSegmentsMutation.mutate({ jobId, segments });
+            setShowAnalysisDialog(false);
           }}
         />
       )}
-      
-      {/* 提示词配置弹窗 */}
-      {job && (
+
+      {showPromptConfigDialog && (
         <PromptConfigDialog
           open={showPromptConfigDialog}
           onOpenChange={setShowPromptConfigDialog}
-          jobId={job.id}
-          initialRequirement={job.userRequirement}
+          jobId={jobId}
+          initialRequirement={job.userRequirement || ''}
           initialPrompt={job.scriptPrompt || undefined}
-          onSuccess={refetch}
+          onSuccess={() => {
+            refetch();
+          }}
         />
       )}
-      
-      {/* 内容结构标注弹窗 */}
-      {job && (
+
+      {showStructureDialog && job.contentStructure && (
         <StructureAnnotationDialog
           open={showStructureDialog}
           onOpenChange={setShowStructureDialog}
-          jobId={job.id}
-          initialStructure={job.contentStructure || undefined}
-          onSuccess={refetch}
+          jobId={jobId}
+          initialStructure={job.contentStructure}
+          onSuccess={() => {
+            refetch();
+          }}
         />
       )}
     </div>
