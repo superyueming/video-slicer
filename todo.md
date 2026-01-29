@@ -270,3 +270,12 @@
 - [x] 统一所有按钮样式和图标位置
 - [ ] 主题切换功能待优化（按钮存在但切换效果不明显）
 - [x] 保存checkpoint
+
+## 主题切换功能修复（紧急）
+- [x] 诊断主题切换失败的根本原因（点击按钮后背景颜色不变）
+- [x] 检查ThemeContext的toggleTheme函数是否正确执行
+- [x] 检查CSS变量和dark class是否正确应用
+- [x] 修复主题切换逻辑（删除App.tsx中重复的ThemeProvider）
+- [x] 修复亮色模式CSS颜色定义
+- [x] 测试亮色/暗色模式切换效果
+- [x] 保存checkpoint
