@@ -19,7 +19,9 @@
     "dist:linux": "electron-builder --linux"
   },
   "dependencies": {
-    "electron-updater": "^6.1.7"
+    "@types/uuid": "^10.0.0",
+    "electron-updater": "^6.1.7",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
@@ -53,15 +55,20 @@
     ],
     "win": {
       "target": ["nsis"],
-      "icon": "build/icon.ico"
+      "icon": "build/icon.ico",
+      "sign": null
     },
     "mac": {
-      "target": ["dmg"],
+      "target": [
+        "dmg"
+      ],
       "icon": "build/icon.png",
       "category": "public.app-category.productivity"
     },
     "linux": {
-      "target": ["AppImage"],
+      "target": [
+        "AppImage"
+      ],
       "icon": "build/icon.png",
       "category": "Utility"
     },

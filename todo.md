@@ -365,3 +365,10 @@
 - [x] 转换图标为Linux格式（icon.png 512x512）
 - [x] 配置生产服务器地址（Manus域名）
 - [x] 保存checkpoint
+
+## Windows桌面应用打包测试
+- [x] 安装desktop项目依赖
+- [x] 构建Web项目（生成dist目录）
+- [x] 编译TypeScript主进程
+- [ ] 打包Windows应用（需要Windows环境或Wine）
+- [x] 创建本地打包完整指南
