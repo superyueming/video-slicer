@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `upload_sessions` (\n  `id` int AUTO_INCREMENT PRIMARY KEY,\n  `user_id` int NOT NULL,\n  `upload_id` varchar(64) NOT NULL UNIQUE,\n  `filename` varchar(255) NOT NULL,\n  `file_size` int NOT NULL,\n  `mime_type` varchar(100),\n  `chunk_size` int NOT NULL,\n  `total_chunks` int NOT NULL,\n  `uploaded_chunks` json NOT NULL,\n  `s3_upload_id` varchar(255),\n  `s3_key` text,\n  `s3_parts` json,\n  `status` enum('uploading','completed','failed','cancelled') NOT NULL DEFAULT 'uploading',\n  `progress` int NOT NULL DEFAULT 0,\n  `error_message` text,\n  `final_url` text,\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  `expires_at` timestamp NOT NULL\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 28B4hwZEfm8VzTA.118e2f71f6aa --database YzKxrb3WDhX8V8hPEaRuDD --execute CREATE TABLE IF NOT EXISTS `upload_sessions` (\n  `id` int AUTO_INCREMENT PRIMARY KEY,\n  `user_id` int NOT NULL,\n  `upload_id` varchar(64) NOT NULL UNIQUE,\n  `filename` varchar(255) NOT NULL,\n  `file_size` int NOT NULL,\n  `mime_type` varchar(100),\n  `chunk_size` int NOT NULL,\n  `total_chunks` int NOT NULL,\n  `uploaded_chunks` json NOT NULL,\n  `s3_upload_id` varchar(255),\n  `s3_key` text,\n  `s3_parts` json,\n  `status` enum('uploading','completed','failed','cancelled') NOT NULL DEFAULT 'uploading',\n  `progress` int NOT NULL DEFAULT 0,\n  `error_message` text,\n  `final_url` text,\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  `expires_at` timestamp NOT NULL\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1720
+}

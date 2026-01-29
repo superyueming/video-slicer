@@ -5,56 +5,31 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Progress } from "@/components/ui/progress";
-import { Upload, Sparkles, Scissors, FileVideo, Zap } from "lucide-react";
+import { Sparkles, Scissors, FileVideo, Zap } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { ChunkedUploader } from "@/components/ChunkedUploader";
 
 export default function Home() {
   const [, setLocation] = useLocation();
-  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [uploadedVideo, setUploadedVideo] = useState<{ url: string; key: string; filename: string } | null>(null);
   const [requirement, setRequirement] = useState("");
   const [asrMethod, setAsrMethod] = useState<"whisper" | "aliyun">("whisper");
-  const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isCreatingJob, setIsCreatingJob] = useState(false);
 
-  const uploadVideoMutation = trpc.video.uploadVideo.useMutation();
   const createJobMutation = trpc.video.createJob.useMutation();
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
+  const handleUploadComplete = useCallback((result: { url: string; key: string; filename: string }) => {
+    setUploadedVideo(result);
+    toast.success("视频上传成功！");
   }, []);
 
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-
-    const files = Array.from(e.dataTransfer.files);
-    const videoFile = files.find(file => file.type.startsWith("video/"));
-
-    if (videoFile) {
-      setVideoFile(videoFile);
-    } else {
-      toast.error("请上传视频文件");
-    }
-  }, []);
-
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setVideoFile(file);
-    }
+  const handleUploadError = useCallback((error: Error) => {
+    toast.error(`上传失败：${error.message}`);
   }, []);
 
   const handleSubmit = async () => {
-    if (!videoFile) {
+    if (!uploadedVideo) {
       toast.error("请先上传视频文件");
       return;
     }
@@ -64,142 +39,38 @@ export default function Home() {
       return;
     }
 
-    // 保存file引用，避免异步操作中state变化
-    const fileToUpload = videoFile;
-    
-    // 验证file对象
-    console.log('File to upload:', {
-      name: fileToUpload.name,
-      size: fileToUpload.size,
-      type: fileToUpload.type,
-      lastModified: fileToUpload.lastModified,
-    });
-    
-    if (!fileToUpload.size || fileToUpload.size === 0) {
-      toast.error("文件为空，请选择有效的视频文件");
-      return;
-    }
-
-    // 文件大小检查（2GB）
-    const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024;
-    if (fileToUpload.size > MAX_FILE_SIZE) {
-      toast.error(`文件大小超过限制，最大支持2GB`);
-      return;
-    }
-
-    setIsUploading(true);
+    setIsCreatingJob(true);
 
     try {
-      // 上传视频（使用FormData）
-      toast.info("正在上传视频...");
-      
-      const formData = new FormData();
-      formData.append('video', fileToUpload);
-      
-      // 使用XMLHttpRequest以支持进度
-      const uploadResult = await new Promise<{
-        fileKey: string;
-        url: string;
-        filename: string;
-        size: number;
-        contentType: string;
-      }>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            const percentComplete = Math.round((e.loaded / e.total) * 100);
-            setUploadProgress(percentComplete);
-          }
-        };
-        
-        xhr.onload = () => {
-          if (xhr.status === 200) {
-            try {
-              const response = JSON.parse(xhr.responseText);
-              if (response.success) {
-                resolve({
-                  fileKey: response.fileKey,
-                  url: response.url,
-                  filename: response.filename,
-                  size: response.size,
-                  contentType: response.contentType,
-                });
-              } else {
-                reject(new Error(response.error || '上传失败'));
-              }
-            } catch (e) {
-              reject(new Error('解析响应失败'));
-            }
-          } else {
-            reject(new Error(`上传失败: ${xhr.status}`));
-          }
-        };
-        
-        xhr.onerror = () => {
-          reject(new Error('网络错误'));
-        };
-        
-        xhr.ontimeout = () => {
-          reject(new Error('上传超时，请检查网络或尝试更小的文件'));
-        };
-        
-        xhr.open('POST', '/api/upload-video');
-        // 设置超时时间为10分钟（600000ms），适合大文件上传
-        xhr.timeout = 600000;
-        xhr.send(formData);
-      });
-      
-      setUploadProgress(100);
+      toast.info("正在创建任务...");
 
-      // 4. 创建处理任务
-      toast.info("正在创建处理任务...");
-      const jobResult = await createJobMutation.mutateAsync({
-        videoUrl: uploadResult.url,
-        videoKey: uploadResult.fileKey,
-        filename: uploadResult.filename,
-        fileSize: uploadResult.size,
-        userRequirement: requirement,
+      const job = await createJobMutation.mutateAsync({
+        videoUrl: uploadedVideo.url,
+        videoKey: uploadedVideo.key,
+        filename: uploadedVideo.filename,
+        fileSize: 0, // Will be updated by backend
+        userRequirement: requirement.trim(),
         asrMethod,
       });
 
-      toast.success("任务创建成功！");
-      setLocation(`/job/${jobResult.jobId}`);
-    } catch (error: any) {
-      console.error("提交失败:", error);
-      
-      // 更好的错误提示
-      let errorMessage = "提交失败，请重试";
-      
-      if (error.message) {
-        errorMessage = error.message;
-      } else if (error.data?.message) {
-        errorMessage = error.data.message;
-      } else if (error instanceof ProgressEvent) {
-        errorMessage = "网络连接失败，请检查网络后重试";
-      }
-      
-      toast.error(errorMessage);
+      toast.success("任务创建成功！正在处理中...");
+      setLocation(`/job/${job.jobId}`);
+    } catch (error) {
+      console.error("[Submit] Error:", error);
+      toast.error(error instanceof Error ? error.message : "创建任务失败");
     } finally {
-      setIsUploading(false);
-      setUploadProgress(0);
+      setIsCreatingJob(false);
     }
   };
 
   return (
-    <div className="min-h-screen gradient-bg">
-      {/* Hero Section */}
-      <div className="container py-16">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-primary">AI驱动的智能剪辑</span>
-          </div>
-          
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-primary via-purple-400 to-pink-400 bg-clip-text text-transparent px-4">
-            AI视频智能切片
+    <div className="min-h-screen bg-background">
+      <div className="container py-8 sm:py-12 md:py-16">
+        {/* Hero Section */}
+        <div className="text-center mb-8 sm:mb-12 md:mb-16">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent px-4">
+            AI视频智能切片工具
           </h1>
-          
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-6 sm:mb-8 px-4">
             自动识别演讲内容，智能选择精彩片段，一键生成带字幕的短视频
           </p>
@@ -230,54 +101,19 @@ export default function Home() {
             {/* Upload Area */}
             <div>
               <Label className="text-lg font-semibold mb-4 block">上传视频</Label>
-              <div
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={`
-                  relative border-2 border-dashed rounded-xl p-12 text-center transition-all
-                  ${isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}
-                  ${videoFile ? "bg-accent/30" : ""}
-                `}
-              >
-                <input
-                  type="file"
-                  accept="video/*"
-                  onChange={handleFileSelect}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  disabled={isUploading}
-                />
-                
-                {videoFile ? (
-                  <div className="space-y-2">
-                    <FileVideo className="w-12 h-12 mx-auto text-primary" />
-                    <p className="font-medium">{videoFile.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {(videoFile.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setVideoFile(null);
-                      }}
-                      disabled={isUploading}
-                    >
-                      重新选择
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Upload className="w-12 h-12 mx-auto text-muted-foreground" />
-                    <p className="text-lg font-medium">拖拽视频文件到这里</p>
-                    <p className="text-sm text-muted-foreground">或点击选择文件</p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      支持 MP4, AVI, MOV 等常见格式
-                    </p>
-                  </div>
-                )}
-              </div>
+              <ChunkedUploader
+                onUploadComplete={handleUploadComplete}
+                onUploadError={handleUploadError}
+                accept="video/*"
+                maxSize={2 * 1024 * 1024 * 1024} // 2GB
+              />
+              {uploadedVideo && (
+                <div className="mt-4 p-4 bg-accent/30 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    ✓ 已上传: {uploadedVideo.filename}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Requirement Input */}
@@ -291,7 +127,7 @@ export default function Home() {
                 value={requirement}
                 onChange={(e) => setRequirement(e.target.value)}
                 className="min-h-[120px] resize-none"
-                disabled={isUploading}
+                disabled={isCreatingJob}
               />
               <p className="text-sm text-muted-foreground mt-2">
                 描述您想要的视频片段类型，AI会根据您的需求智能选择内容
@@ -304,7 +140,7 @@ export default function Home() {
               <RadioGroup
                 value={asrMethod}
                 onValueChange={(value) => setAsrMethod(value as "whisper" | "aliyun")}
-                disabled={isUploading}
+                disabled={isCreatingJob}
               >
                 <div className="flex items-center space-x-2 p-4 rounded-lg border border-border hover:bg-accent/50 transition-colors">
                   <RadioGroupItem value="whisper" id="whisper" />
@@ -328,28 +164,17 @@ export default function Home() {
               </RadioGroup>
             </div>
 
-            {/* Upload Progress */}
-            {isUploading && uploadProgress > 0 && uploadProgress < 100 && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">上传进度</span>
-                  <span className="font-medium">{uploadProgress}%</span>
-                </div>
-                <Progress value={uploadProgress} className="h-2" />
-              </div>
-            )}
-
             {/* Submit Button */}
             <Button
               size="lg"
               className="w-full text-lg h-14"
               onClick={handleSubmit}
-              disabled={isUploading || !videoFile || !requirement.trim()}
+              disabled={isCreatingJob || !uploadedVideo || !requirement.trim()}
             >
-              {isUploading ? (
+              {isCreatingJob ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                  {uploadProgress > 0 && uploadProgress < 100 ? `上传中 ${uploadProgress}%` : '处理中...'}
+                  创建任务中...
                 </>
               ) : (
                 <>

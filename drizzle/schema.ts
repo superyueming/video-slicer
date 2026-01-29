@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json } from "drizzle-orm/mysql-core";
+import { int, bigint, mysqlEnum, mysqlTable, text, timestamp, varchar, json } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -121,3 +121,43 @@ export const appVersions = mysqlTable("app_versions", {
 
 export type AppVersion = typeof appVersions.$inferSelect;
 export type InsertAppVersion = typeof appVersions.$inferInsert;
+
+/**
+ * Upload sessions table for chunked upload with resume capability
+ */
+export const uploadSessions = mysqlTable("upload_sessions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull(),
+  
+  // Upload identification
+  uploadId: varchar("upload_id", { length: 64 }).notNull().unique(), // Client-generated UUID
+  filename: varchar("filename", { length: 255 }).notNull(),
+  fileSize: int("file_size").notNull(), // Total file size in bytes (use int for files < 2GB)
+  mimeType: varchar("mime_type", { length: 100 }),
+  
+  // Chunking info
+  chunkSize: int("chunk_size").notNull(), // Size of each chunk in bytes
+  totalChunks: int("total_chunks").notNull(),
+  uploadedChunks: json("uploaded_chunks").$type<number[]>().notNull(), // Array of uploaded chunk indices
+  
+  // S3 Multipart Upload
+  s3UploadId: varchar("s3_upload_id", { length: 255 }), // S3 multipart upload ID
+  s3Key: text("s3_key"), // Target S3 key
+  s3Parts: json("s3_parts").$type<Array<{ PartNumber: number; ETag: string }>>(), // S3 part ETags
+  
+  // Status
+  status: mysqlEnum("status", ["uploading", "completed", "failed", "cancelled"]).default("uploading").notNull(),
+  progress: int("progress").default(0).notNull(), // 0-100
+  errorMessage: text("error_message"),
+  
+  // Final result
+  finalUrl: text("final_url"), // URL after upload completes
+  
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  expiresAt: timestamp("expires_at").notNull(), // Auto-cleanup after 24 hours
+});
+
+export type UploadSession = typeof uploadSessions.$inferSelect;
+export type InsertUploadSession = typeof uploadSessions.$inferInsert;

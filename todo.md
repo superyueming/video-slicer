@@ -372,3 +372,15 @@
 - [x] 编译TypeScript主进程
 - [ ] 打包Windows应用（需要Windows环境或Wine）
 - [x] 创建本地打包完整指南
+
+## 断点续传功能开发
+- [x] 设计断点续传架构和流程
+- [x] 创建上传会话表（upload_sessions）
+- [x] 实现后端分片上传API（initUpload, uploadChunk, completeUpload, cancelUpload, getUploadStatus）
+- [x] 实现临时文件合并方案（适配Manus storage代理）
+- [x] 创建前端分片上传组件（ChunkedUploader）
+- [x] 实现上传进度保存和恢复
+- [x] 集成到Home页面替换原有上传
+- [x] 添加暂停/恢复/取消功能
+- [ ] 测试大文件上传和断点恢复
+- [ ] 保存checkpoint
