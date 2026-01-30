@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@types/uuid": "^10.0.0",
+    "better-sqlite3": "^12.6.2",
     "builder-util-runtime": "9.2.3",
     "debug": "^4.3.4",
     "electron-updater": "^6.1.7",
@@ -39,6 +40,7 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^20.10.0",
     "concurrently": "^8.2.2",
@@ -77,11 +79,15 @@
       {
         "from": "resources/ffmpeg/win",
         "to": "ffmpeg",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {
-      "target": ["nsis"],
+      "target": [
+        "nsis"
+      ],
       "icon": "build/icon.ico",
       "sign": null,
       "extraResources": [

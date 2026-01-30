@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务列表 - AI视频智能切片工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            font-weight: 600;
+        }
+
+        .btn {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 10px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95em;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 40px;
+        }
+
+        .page-title {
+            margin-bottom: 30px;
+        }
+
+        .page-title h2 {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .page-title p {
+            color: #666;
+            font-size: 1.05em;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .empty-state {
+            background: white;
+            border-radius: 16px;
+            padding: 80px 40px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .empty-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            color: #666;
+            font-size: 1.05em;
+            margin-bottom: 30px;
+        }
+
+        .tasks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+        }
+
+        .task-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+        }
+
+        .task-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+
+        .task-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .task-time {
+            font-size: 0.9em;
+            color: #999;
+        }
+
+        .task-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-processing {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .task-info {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .task-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .task-info-label {
+            color: #666;
+        }
+
+        .task-info-value {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>🎬 AI视频智能切片工具</h1>
+            <button class="btn" onclick="window.location.href='/'">返回首页</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="page-title">
+            <h2>视频任务列表</h2>
+            <p>管理您的所有视频切片任务</p>
+        </div>
+
+        <div class="actions">
+            <div></div>
+            <button class="btn btn-primary" onclick="window.location.href='/upload.html'">
+                📤 上传新视频
+            </button>
+        </div>
+
+        <div id="content">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>加载中...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 加载任务列表
+        async function loadTasks() {
+            try {
+                const response = await fetch('/api/tasks');
+                const tasks = await response.json();
+                
+                const contentDiv = document.getElementById('content');
+                
+                if (tasks.length === 0) {
+                    contentDiv.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">📹</div>
+                            <h3>还没有任务</h3>
+                            <p>上传您的第一个视频开始使用</p>
+                            <button class="btn btn-primary" onclick="window.location.href='/upload.html'">
+                                📤 上传视频
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    const tasksHtml = tasks.map(task => `
+                        <div class="task-card" onclick="window.location.href='/task-detail.html?id=${task.id}'">
+                            <div class="task-header">
+                                <div>
+                                    <div class="task-title">任务 #${task.id}</div>
+                                    <div class="task-time">${formatTime(task.createdAt)}</div>
+                                </div>
+                                <div class="task-status status-${task.status}">
+                                    ${getStatusText(task.status)}
+                                </div>
+                            </div>
+                            <div class="task-info">
+                                <div class="task-info-row">
+                                    <span class="task-info-label">当前步骤</span>
+                                    <span class="task-info-value">${getStepText(task.step)}</span>
+                                </div>
+                                ${task.progress !== null && task.progress !== undefined ? `
+                                    <div class="task-info-row">
+                                        <span class="task-info-label">进度</span>
+                                        <span class="task-info-value">${task.progress}%</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: ${task.progress}%"></div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    contentDiv.innerHTML = `<div class="tasks-grid">${tasksHtml}</div>`;
+                }
+            } catch (error) {
+                console.error('Failed to load tasks:', error);
+                document.getElementById('content').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">❌</div>
+                        <h3>加载失败</h3>
+                        <p>${error.message}</p>
+                        <button class="btn btn-primary" onclick="loadTasks()">重试</button>
+                    </div>
+                `;
+            }
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': '等待中',
+                'processing': '处理中',
+                'completed': '已完成',
+                'failed': '失败'
+            };
+            return statusMap[status] || status;
+        }
+
+        function getStepText(step) {
+            const stepMap = {
+                'pending': '等待开始',
+                'extracting_audio': '步骤1: 提取音频',
+                'transcribing': '步骤2: 转录字幕',
+                'analyzing': '步骤3: AI分析',
+                'generating_clips': '步骤4: 生成视频',
+                'completed': '已完成'
+            };
+            return stepMap[step] || step;
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '未知时间';
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+            
+            if (minutes < 1) return '刚刚';
+            if (minutes < 60) return `${minutes}分钟前`;
+            if (hours < 24) return `${hours}小时前`;
+            if (days < 7) return `${days}天前`;
+            
+            return date.toLocaleDateString('zh-CN');
+        }
+
+        // 页面加载时获取任务列表
+        loadTasks();
+        
+        // 每5秒刷新一次
+        setInterval(loadTasks, 5000);
+    </script>
+</body>
+</html>
