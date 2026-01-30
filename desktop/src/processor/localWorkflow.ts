@@ -126,12 +126,12 @@ export async function processVideoLocally(
   );
   
   // 提取音频
-  const audioPath = await extractAudio(videoPath, audioOutputPath, {
-    format: 'mp3',
+  const audioPath = await extractAudio({
+    videoPath,
+    outputPath: audioOutputPath,
     sampleRate: 16000, // 16kHz适合语音识别
     channels: 1,       // 单声道
-    bitrate: '64k',    // 低比特率，减小文件大小
-    onProgress: (ffmpegProgress) => {
+    onProgress: (ffmpegProgress: any) => {
       onProgress?.({
         step: 'extract',
         progress: 20 + (ffmpegProgress.percent || 0) * 0.7, // 20-90%
