@@ -15,4 +15,8 @@
 
 - [x] 检查server.ts中的node spawn代码
 - [x] 修复node路径问题或移除spawn调用
-- [ ] 创建v1.0.7版本并推送到GitHub
+- [x] 创建v1.0.7版本并推送到GitHub
+
+- [x] 分析Cannot GET /问题
+- [x] 添加静态文件服务和前端页面
+- [ ] 创建v1.0.8版本并推送到GitHub

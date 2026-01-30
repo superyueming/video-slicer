@@ -44,24 +44,36 @@ export async function startServer(): Promise<number> {
     
     console.log(`[Server] Starting Express server on port ${port}...`);
     
-    // For now, we'll use a minimal Express server
-    // The full web server with tRPC is too complex for desktop app
-    // We'll create a simple API server instead
-    
     const express = require('express');
+    const path = require('path');
     const app = express();
     
     app.use(express.json());
+    
+    // Serve static files from public directory
+    const publicPath = path.join(__dirname, '../public');
+    console.log(`[Server] Serving static files from: ${publicPath}`);
+    app.use(express.static(publicPath));
     
     // Health check endpoint
     app.get('/health', (_req: any, res: any) => {
       res.json({ status: 'ok', version: '1.0.0' });
     });
     
+    // API endpoints can be added here
+    app.get('/api/status', (_req: any, res: any) => {
+      res.json({ 
+        status: 'running',
+        version: '1.0.0',
+        timestamp: new Date().toISOString()
+      });
+    });
+    
     // Start listening
     await new Promise<void>((resolve, reject) => {
       const server = app.listen(port, () => {
         console.log(`[Server] Express server started on port ${port}`);
+        console.log(`[Server] Access at http://localhost:${port}`);
         resolve();
       });
       
