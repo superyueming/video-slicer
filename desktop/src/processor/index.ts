@@ -6,3 +6,5 @@ export * from './ffmpeg';
 export * from './audioExtractor';
 export * from './videoClipper';
 export * from './videoConcatenator';
+export * from './localWorkflow';
+export * from './clipManager';
