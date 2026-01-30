@@ -19,4 +19,8 @@
 
 - [x] 分析Cannot GET /问题
 - [x] 添加静态文件服务和前端页面
-- [ ] 创建v1.0.8版本并推送到GitHub
+- [x] 创建v1.0.8版本并推送到GitHub
+
+- [x] 检查electron-builder配置
+- [x] 修复public目录打包问题
+- [ ] 创建v1.0.9版本并推送到GitHub
