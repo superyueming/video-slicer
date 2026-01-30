@@ -36,7 +36,7 @@
     "semver": "^7.3.8",
     "tiny-typed-emitter": "^2.1.0",
     "universalify": "^2.0.1",
-    "uuid": "^13.0.0"
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
@@ -77,11 +77,15 @@
       {
         "from": "resources/ffmpeg/win",
         "to": "ffmpeg",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {
-      "target": ["nsis"],
+      "target": [
+        "nsis"
+      ],
       "icon": "build/icon.ico",
       "sign": null,
       "extraResources": [

@@ -1,6 +1,5 @@
 import * as https from 'https';
-// Use require for uuid to avoid ES Module issues in Electron
-const { v4: uuidv4 } = require('uuid');
+import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import * as path from 'path';
 import { app } from 'electron';
