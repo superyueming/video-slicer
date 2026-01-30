@@ -48,6 +48,7 @@
   "build": {
     "appId": "com.videoslicer.app",
     "productName": "AI视频智能切片",
+    "asar": false,
     "directories": {
       "output": "release",
       "buildResources": "build"
