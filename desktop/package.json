@@ -54,13 +54,18 @@
     },
     "files": [
       "dist/**/*",
+      "node_modules/**/*",
       "../dist/**/*",
       "../server/**/*",
       "../drizzle/**/*",
       "../shared/**/*",
       "../package.json",
       "!../client/**/*",
-      "!../node_modules/**/*"
+      "!../node_modules/**/*",
+      "!node_modules/*/{CHANGELOG.md,README.md,readme.md,README,LICENSE,license}",
+      "!node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!node_modules/*.d.ts",
+      "!node_modules/.bin"
     ],
     "extraResources": [
       {
