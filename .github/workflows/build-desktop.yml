@@ -51,7 +51,10 @@ jobs:
         shell: bash
       
       - name: Install desktop dependencies
-        run: cd desktop && pnpm install --no-frozen-lockfile
+        run: |
+          cd desktop
+          # Use npm instead of pnpm to avoid symlink issues with electron-builder
+          npm install
         shell: bash
       
       - name: Build web project
