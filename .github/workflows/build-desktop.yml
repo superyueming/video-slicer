@@ -21,6 +21,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          clean: true
+          lfs: false
+          
+      - name: Fix line endings
+        run: |
+          echo "=== Before fix ===" 
+          head -n 1 desktop/src/main.ts | od -c
+          find desktop/src -name "*.ts" -exec dos2unix {} \;
+          echo "=== After fix ==="
+          head -n 1 desktop/src/main.ts | od -c
+        shell: bash          
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
