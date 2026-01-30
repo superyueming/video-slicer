@@ -272,22 +272,27 @@ app.whenReady().then(async () => {
     serverPort = await startServer();
     console.log(`[Startup] Server started on port ${serverPort}`);
     
-    // 2. Check update and verify online
-    const canProceed = await checkUpdateAndVerify();
+    // 2. Check update and verify online (DISABLED for now to ensure app starts)
+    // TODO: Re-enable after basic functionality is stable
+    // const canProceed = await checkUpdateAndVerify();
+    // if (!canProceed) {
+    //   console.log('[Startup] Cannot proceed, exiting...');
+    //   app.quit();
+    //   return;
+    // }
     
-    if (!canProceed) {
-      console.log('[Startup] Cannot proceed, exiting...');
-      app.quit();
-      return;
-    }
+    console.log('[Startup] Skipping online verification (disabled)');
     
     // 3. Create main window
     console.log('[Startup] Creating main window...');
     await createWindow();
     
+    console.log('[Startup] Application started successfully');
+    
   } catch (error) {
     console.error('[Startup] Fatal error:', error);
-    dialog.showErrorBox('启动失败', '应用启动失败，请重试');
+    console.error('[Startup] Error stack:', (error as Error).stack);
+    dialog.showErrorBox('启动失败', `应用启动失败: ${(error as Error).message}\n\n请查看控制台日志获取详细信息`);
     app.quit();
   }
 });
