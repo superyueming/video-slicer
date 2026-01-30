@@ -472,3 +472,12 @@
 - [ ] 测试GitHub Actions工作流
 - [ ] 验证自动构建结果
 - [ ] 保存checkpoint
+
+
+## 修复桌面应用运行时依赖缺失（v5.2.0）
+- [ ] 检查main.js和updater.js中使用的所有Node.js模块
+- [ ] 添加缺失的fs-extra等依赖到desktop/package.json
+- [ ] 更新electron-builder配置确保依赖被正确打包
+- [ ] 重新构建并测试安装包
+- [ ] 验证应用能正常启动和运行
+- [ ] 保存checkpoint
