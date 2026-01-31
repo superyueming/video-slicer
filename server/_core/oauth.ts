@@ -10,6 +10,11 @@ function getQueryParam(req: Request, key: string): string | undefined {
 }
 
 export function registerOAuthRoutes(app: Express) {
+  // Skip OAuth in desktop mode
+  if (process.env.DESKTOP_MODE === 'true') {
+    return;
+  }
+  
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");

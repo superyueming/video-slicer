@@ -7,15 +7,21 @@
 - [x] 添加前端页面修复Cannot GET /
 - [x] 修复public目录打包问题
 
-## 功能开发
+## v1.1.0 已完成
 - [x] 分析web版本的功能和页面结构
-- [ ] 设计桌面版架构（本地化、SQLite、FFmpeg）
 - [x] 实现任务列表页面（tasks.html）
-- [ ] 实现视频上传页面（upload.html）
-- [ ] 实现任务详情页面（task-detail.html）
-- [x] 实现Express API端点（/api/tasks, /api/upload等）
+- [x] 实现视频选择页面（select-video.html）
+- [x] 实现Express API端点（/api/tasks）
 - [x] 实现SQLite数据库存储
-- [ ] 实现视频处理逻辑（FFmpeg + AI）
-- [ ] 实现结果展示和下载
-- [ ] 测试完整流程
-- [ ] 创建新版本并发布
+
+## v1.2.0 开发任务（Desktop = Web完整版包装器 + MySQL）
+- [x] 创建本地文件存储适配器（替代S3）
+- [x] 在web版server中添加DESKTOP_MODE环境变量支持
+- [x] 修改OAuth逻辑：desktop模式下跳过认证
+- [ ] 修改desktop的main.ts启动web版服务器
+- [ ] 复制web版构建产物到desktop/public
+- [ ] 安装web版的所有依赖到desktop/package.json
+- [x] 创建desktop环境变量配置文件
+- [x] 添加MySQL安装和配置说明文档
+- [ ] 测试完整流程（选择视频→处理→查看结果）
+- [ ] 创建v1.2.0并发布

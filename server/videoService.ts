@@ -3,7 +3,7 @@ import { promisify } from 'util';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
-import { storagePut } from './storage';
+import { storagePut } from './storageAdapter';
 import { invokeLLM } from './_core/llm';
 
 const __filename = fileURLToPath(import.meta.url);

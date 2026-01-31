@@ -1,0 +1,23 @@
+CREATE TABLE `upload_sessions` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`user_id` int NOT NULL,
+	`upload_id` varchar(64) NOT NULL,
+	`filename` varchar(255) NOT NULL,
+	`file_size` int NOT NULL,
+	`mime_type` varchar(100),
+	`chunk_size` int NOT NULL,
+	`total_chunks` int NOT NULL,
+	`uploaded_chunks` json NOT NULL DEFAULT ('[]'),
+	`s3_upload_id` varchar(255),
+	`s3_key` text,
+	`s3_parts` json DEFAULT ('[]'),
+	`status` enum('uploading','completed','failed','cancelled') NOT NULL DEFAULT 'uploading',
+	`progress` int NOT NULL DEFAULT 0,
+	`error_message` text,
+	`final_url` text,
+	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`updated_at` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	`expires_at` timestamp NOT NULL,
+	CONSTRAINT `upload_sessions_id` PRIMARY KEY(`id`),
+	CONSTRAINT `upload_sessions_upload_id_unique` UNIQUE(`upload_id`)
+);

@@ -9,7 +9,7 @@ import {
   failUploadSession,
   cancelUploadSession,
 } from "./uploadDb";
-import { storagePut } from "./storage";
+import { storagePut } from "./storageAdapter";
 import * as fs from "fs/promises";
 import * as path from "path";
 import * as os from "os";

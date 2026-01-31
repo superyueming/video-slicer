@@ -90,3 +90,38 @@ export async function getUserByOpenId(openId: string) {
 }
 
 // TODO: add feature queries here as your schema grows.
+
+/**
+ * Get or create desktop user for local mode
+ * In desktop mode, we use a fixed user instead of OAuth
+ */
+export async function getOrCreateDesktopUser() {
+  const DESKTOP_USER_OPEN_ID = 'desktop-user';
+  
+  const db = await getDb();
+  if (!db) {
+    throw new Error('[Database] Cannot get desktop user: database not available');
+  }
+  
+  // Try to get existing user
+  let user = await getUserByOpenId(DESKTOP_USER_OPEN_ID);
+  
+  // Create if not exists
+  if (!user) {
+    await upsertUser({
+      openId: DESKTOP_USER_OPEN_ID,
+      name: 'Desktop User',
+      email: null,
+      loginMethod: 'desktop',
+      role: 'admin', // Desktop user has admin privileges
+      lastSignedIn: new Date(),
+    });
+    user = await getUserByOpenId(DESKTOP_USER_OPEN_ID);
+  }
+  
+  if (!user) {
+    throw new Error('[Database] Failed to create desktop user');
+  }
+  
+  return user;
+}

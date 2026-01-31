@@ -13,11 +13,18 @@ export async function createContext(
 ): Promise<TrpcContext> {
   let user: User | null = null;
 
-  try {
-    user = await sdk.authenticateRequest(opts.req);
-  } catch (error) {
-    // Authentication is optional for public procedures.
-    user = null;
+  // Desktop mode: auto-login as default user
+  if (process.env.DESKTOP_MODE === 'true') {
+    const { getOrCreateDesktopUser } = await import('../db');
+    user = await getOrCreateDesktopUser();
+  } else {
+    // Web mode: use OAuth authentication
+    try {
+      user = await sdk.authenticateRequest(opts.req);
+    } catch (error) {
+      // Authentication is optional for public procedures.
+      user = null;
+    }
   }
 
   return {

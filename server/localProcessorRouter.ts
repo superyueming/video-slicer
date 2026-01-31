@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { protectedProcedure, router } from './_core/trpc';
-import { storagePut } from './storage';
+import { storagePut } from './storageAdapter';
 import { nanoid } from 'nanoid';
 import type { WhisperResponse } from './_core/voiceTranscription';
 

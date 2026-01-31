@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import path from "path";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
@@ -39,6 +40,13 @@ async function startServer() {
   registerOAuthRoutes(app);
   // File upload route
   app.use("/api", uploadRoute);
+  
+  // Serve local storage files in desktop mode
+  if (process.env.DESKTOP_MODE === 'true') {
+    const storageDir = process.env.LOCAL_STORAGE_DIR || path.join(process.cwd(), 'storage');
+    app.use('/storage', express.static(storageDir));
+    console.log('[Desktop Mode] Serving local storage from:', storageDir);
+  }
   // tRPC API
   app.use(
     "/api/trpc",

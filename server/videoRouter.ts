@@ -4,7 +4,7 @@ import { protectedProcedure, router, publicProcedure } from './_core/trpc';
 import { createVideoJob, getUserVideoJobs, getVideoJob, updateJobProgress, markJobCompleted, markJobFailed } from './videoDb';
 import { getDb } from './db';
 import { videoJobs } from '../drizzle/schema';
-import { storagePut } from './storage';
+import { storagePut } from './storageAdapter';
 import { getPresignedUploadUrl, confirmUpload } from './storagePresigned';
 import path from 'path';
 import fs from 'fs/promises';

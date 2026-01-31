@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { storagePut } from './storage';
+import { storagePut } from './storageAdapter';
 import { nanoid } from 'nanoid';
 import fs from 'fs/promises';
 import path from 'path';

@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
 import { getVideoJob, updateJobProgress } from './videoDb';
-import { storagePut } from './storage';
+import { storagePut } from './storageAdapter';
 import { extractAudio, transcribeAudio } from "./videoService";
 import { generateSRT } from "./srtGenerator";
 import type { WhisperResponse } from "./_core/voiceTranscription";
