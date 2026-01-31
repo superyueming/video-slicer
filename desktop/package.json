@@ -1,6 +1,6 @@
 {
   "name": "video-slicer-desktop",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "AI视频智能切片 - 桌面应用",
   "main": "dist/main.js",
   "author": "Your Name",
