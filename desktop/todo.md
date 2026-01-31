@@ -18,9 +18,9 @@
 - [x] 创建本地文件存储适配器（替代S3）
 - [x] 在web版server中添加DESKTOP_MODE环境变量支持
 - [x] 修改OAuth逻辑：desktop模式下跳过认证
-- [ ] 修改desktop的main.ts启动web版服务器
-- [ ] 复制web版构建产物到desktop/public
-- [ ] 安装web版的所有依赖到desktop/package.json
+- [x] 修改desktop的main.ts启动web版服务器
+- [x] 复制web版构建产物到desktop/public
+- [x] 安装web版的所有依赖到desktop/package.json
 - [x] 创建desktop环境变量配置文件
 - [x] 添加MySQL安装和配置说明文档
 - [ ] 测试完整流程（选择视频→处理→查看结果）
