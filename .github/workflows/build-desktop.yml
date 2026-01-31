@@ -61,6 +61,15 @@ jobs:
         run: pnpm run build
         shell: bash
       
+      - name: Copy web build to desktop
+        run: |
+          cd desktop
+          rm -rf web-dist
+          cp -r ../dist web-dist
+          echo "Web build copied to desktop/web-dist/"
+          ls -la web-dist/
+        shell: bash
+      
       - name: Download FFmpeg
         run: |
           cd desktop
@@ -75,8 +84,12 @@ jobs:
           ls -la resources/ffmpeg/win32/
         shell: bash
       
-      - name: Build desktop app
-        run: cd desktop && pnpm run build:prod
+      - name: Build desktop TypeScript
+        run: cd desktop && npm run build:main
+        shell: bash
+      
+      - name: Package desktop app
+        run: cd desktop && npm run dist:win
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
